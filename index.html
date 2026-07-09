@@ -18,6 +18,8 @@
             --card-bg: #ffffff;
             --btn-blue: #d32f2f;      
             --btn-orange: #FF9933;   
+            --status-on: #4cd137;
+            --status-off: #c23616;
         }
 
         body.night-mode {
@@ -34,7 +36,29 @@
             background-color: var(--white-bg); 
             color: var(--text-color);
             overflow-x: hidden; 
-            transform-origin: top center;
+        }
+
+        /* लॉग-इन स्क्रीन स्टाइल */
+        #loginScreen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #1a1a1a; display: flex; justify-content: center;
+            align-items: center; z-index: 99999; padding: 20px;
+        }
+        .login-box {
+            background: #ffffff; padding: 30px; border-radius: 20px;
+            border: 5px solid var(--light-green); max-width: 400px; width: 100%;
+            text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .login-input {
+            width: 100%; padding: 15px; border-radius: 50px;
+            border: 3px solid var(--light-green); font-size: 18px;
+            text-align: center; margin: 20px 0; outline: none;
+        }
+        .login-submit {
+            width: 100%; padding: 15px; border-radius: 50px;
+            background: var(--police-blue); color: white; font-size: 16px;
+            font-weight: 900; border: none; cursor: pointer;
+            box-shadow: 0 4px 0 var(--green-shadow);
         }
 
         .main-header { 
@@ -47,22 +71,24 @@
         .main-title { font-size: clamp(24px, 6vw, 40px); font-weight: 900; margin: 0; text-transform: uppercase; }
 
         .top-actions {
-            background: var(--dark-bg);
-            padding: 15px 10px;
-            display: flex;
-            justify-content: center;
-            gap: 8px; 
-            flex-wrap: wrap; 
+            background: var(--dark-bg); padding: 15px 10px;
+            display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; 
         }
         
         .mode-btn, .links-btn { 
             padding: 12px 10px; border-radius: 10px; font-weight: 900; border: none; cursor: pointer;
             font-size: 12px; min-width: 100px; flex: 1; max-width: 150px; text-align: center; text-transform: uppercase;
         }
-
         .mode-btn { background-color: var(--light-green); color: #fff; box-shadow: 0 4px 0 var(--green-shadow); }
         .links-btn.blue { background-color: var(--btn-blue); box-shadow: 0 4px 0 #9a1f1f; color: white; }
         .links-btn.orange { background-color: var(--btn-orange); box-shadow: 0 4px 0 #cc7a29; color: white; }
+
+        .checkin-container { background: var(--dark-bg); padding: 10px 15px; text-align: center; }
+        .checkin-btn {
+            display: inline-block; width: 100%; max-width: 600px; background: var(--btn-blue);
+            color: white; padding: 14px; font-size: 16px; font-weight: 900;
+            text-decoration: none; border-radius: 50px; box-shadow: 0 4px 0 #9a1f1f;
+        }
 
         /* Modals */
         .modal {
@@ -79,28 +105,25 @@
             border-radius: 10px; box-shadow: 0 3px 0 var(--green-shadow);
         }
 
-        /* Search & Nav Borders */
         .search-container { background: var(--dark-bg); padding: 0 15px 15px 15px; border-bottom: 3px solid var(--light-green); }
         .global-search-bar { width: 100%; max-width: 600px; padding: 15px; border-radius: 50px; border: 3px solid var(--light-green); font-size: 18px; display: block; margin: 0 auto; outline: none; }
 
         .nav-container { background-color: var(--dark-bg); padding: 15px 0; position: sticky; top: 0; z-index: 1000; display: flex; gap: 10px; border-bottom: 4px solid var(--light-green); overflow-x: auto; padding-left: 10px; scrollbar-width: none; }
         .tab-btn { font-size: 14px; padding: 10px 20px; font-weight: 900; cursor: pointer; border-radius: 50px; background-color: var(--light-green); color: #fff; border: none; white-space: nowrap; box-shadow: 0 4px 0 var(--green-shadow); }
-        
-        .tab-btn.active, .nav-container button.active, #tabMenu button.active { 
-            background-color: #ffffff !important; 
-            color: #000000 !important; 
-            transform: translateY(3px); 
-            box-shadow: 0 2px 0 var(--green-shadow); 
-        }
+        .tab-btn.active { background-color: #ffffff !important; color: #000000 !important; transform: translateY(3px); box-shadow: 0 2px 0 var(--green-shadow); }
 
         .container { padding: 15px; max-width: 1100px; margin: auto; padding-bottom: 120px; }
         .section { display: none; }
         .section.active { display: block; }
         
-        .list-card { background: var(--card-bg); padding: 20px; border-radius: 20px; border: 5px solid var(--light-green); margin-bottom: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); color: var(--text-color); }
+        .list-card { background: var(--card-bg); padding: 20px; border-radius: 20px; border: 5px solid var(--light-green); margin-bottom: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); color: var(--text-color); position: relative; }
         .list-card p { color: var(--card-text-mute); margin: 8px 0; }
         .list-card p b { color: var(--text-color); }
         
+        .status-badge { position: absolute; top: 15px; right: 15px; padding: 5px 12px; border-radius: 50px; font-size: 11px; font-weight: 900; color: white; text-transform: uppercase; }
+        .status-badge.on { background-color: var(--status-on); }
+        .status-badge.off { background-color: var(--status-off); }
+
         .ps-header {
             background-color: var(--dark-bg); color: #ffffff; padding: 15px;
             margin-bottom: 10px; border-radius: 15px; cursor: pointer; font-weight: 900;
@@ -113,61 +136,79 @@
         .action-btn { padding: 12px 5px; text-decoration: none; color: #fff; border-radius: 50px; text-align: center; font-weight: 900; background-color: var(--light-green); border: none; font-size: 11px; }
         
         .zoom-controls { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 4000; }
-        .zoom-btn { width: 50px; height: 50px; border-radius: 50%; background-color: var(--light-green); border: 3px solid var(--green-shadow); font-size: 24px; font-weight: 900; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .zoom-btn { width: 50px; height: 50px; border-radius: 50%; background-color: var(--light-green); border: 3px solid var(--green-shadow); font-size: 24px; font-weight: 900; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .home-btn { background-color: var(--btn-blue); border-color: #9a1f1f; color: white; }
+        
+        .logout-btn { background-color: #7f8c8d !important; color: white !important; }
     </style>
 </head>
 <body>
 
-<div class="main-header">
-    <h1 class="main-title">SUPERINTENDENT OF POLICE</h1>
-    <div class="main-subtitle">PASCHIM MEDINIPUR</div>
+<!-- 🔑 स्मार्ट लॉग-इन स्क्रीन -->
+<div id="loginScreen">
+    <div class="login-box">
+        <h2 style="color:var(--police-blue); margin:0;">PASCHIM MEDINIPUR POLICE</h2>
+        <p style="color:#555; font-weight:bold; margin-top:5px;">सुरक्षित लॉग-इन सिस्टम</p>
+        <input type="tel" id="userMobile" class="login-input" placeholder="अपना 10-अंकीय मोबाइल नंबर दर्ज करें" maxlength="10">
+        <button class="login-submit" onclick="verifyLogin()">प्रवेश करें (LOGIN)</button>
+        <p id="loginError" style="color:red; font-weight:bold; margin-top:10px; display:none;">⚠️ यह नंबर रिकॉर्ड में नहीं है!</p>
+    </div>
 </div>
 
-<div class="top-actions">
-    <button class="mode-btn" onclick="toggleNightMode()" id="modeBtn">🌙 NIGHT MODE</button>
-    <button class="links-btn blue" onclick="toggleModal('quickLinksModal')">🌐 QUICK LINKS</button>
-    <button class="links-btn orange" onclick="toggleModal('importantLinksModal')">📌 IMPORTANT SITES</button>
-</div>
+<!-- मुख्य ऍप कंटेंट (लॉगिन के बाद दिखेगा) -->
+<div id="appContent" style="display:none;">
+    <div class="main-header">
+        <h1 class="main-title">SUPERINTENDENT OF POLICE</h1>
+        <div class="main-subtitle">PASCHIM MEDINIPUR</div>
+    </div>
 
-<div id="quickLinksModal" class="modal">
-    <div class="modal-content">
-        <h2 style="text-align:center;">🌐 Quick Links</h2><hr>
-        <div style="max-height: 350px; overflow-y: auto;">
+    <div class="top-actions">
+        <button class="mode-btn" onclick="toggleNightMode()" id="modeBtn">🌙 NIGHT MODE</button>
+        <button class="links-btn blue" onclick="toggleModal('quickLinksModal')">🌐 QUICK LINKS</button>
+        <button class="links-btn orange" onclick="toggleModal('importantLinksModal')">📌 IMPORTANT SITES</button>
+    </div>
+
+    <div class="checkin-container">
+        <a href="https://docs.google.com/forms/" target="_blank" class="checkin-btn">🚨 DUTY CHECK-IN FORM</a>
+    </div>
+
+    <div id="quickLinksModal" class="modal">
+        <div class="modal-content">
+            <h2 style="text-align:center;">🌐 Quick Links</h2><hr>
             <a href="https://wmdppolicekhoj.co.in/" target="_blank" class="link-item">Khoj (Police Dept)</a>
-            <a href="https://www.google.com" target="_blank" class="link-item">Google Search</a>
+            <button onclick="toggleModal('quickLinksModal')" style="width:100%; padding:10px; background:#ff4d4d; color:white; border:none; border-radius:10px; margin-top:10px; font-weight:bold;">CLOSE</button>
         </div>
-        <button onclick="toggleModal('quickLinksModal')" style="width:100%; padding:10px; background:#ff4d4d; color:white; border:none; border-radius:10px; margin-top:10px; font-weight:bold; cursor:pointer;">CLOSE</button>
     </div>
-</div>
 
-<div id="importantLinksModal" class="modal">
-    <div class="modal-content">
-        <h2 style="text-align:center;">📌 Important Sites</h2><hr>
-        <div style="max-height: 350px; overflow-y: auto;">
+    <div id="importantLinksModal" class="modal">
+        <div class="modal-content">
+            <h2 style="text-align:center;">📌 Important Sites</h2><hr>
             <a href="https://westbengalpolice.gov.in/" target="_blank" class="link-item">West Bengal Police</a>
-            <a href="https://paschimmedinipur.gov.in/" target="_blank" class="link-item">District Website</a>
+            <button onclick="toggleModal('importantLinksModal')" style="width:100%; padding:10px; background:#ff4d4d; color:white; border:none; border-radius:10px; margin-top:10px; font-weight:bold;">CLOSE</button>
         </div>
-        <button onclick="toggleModal('importantLinksModal')" style="width:100%; padding:10px; background:#ff4d4d; color:white; border:none; border-radius:10px; margin-top:10px; font-weight:bold; cursor:pointer;">CLOSE</button>
     </div>
-</div>
 
-<div class="search-container">
-    <input type="text" id="globalSearch" class="global-search-bar" placeholder="खोजें...">
-</div>
+    <div class="search-container">
+        <input type="text" id="globalSearch" class="global-search-bar" placeholder="खोजें...">
+    </div>
 
-<div class="nav-container" id="tabMenu"></div>
-<div class="container" id="contentArea"></div>
+    <div class="nav-container" id="tabMenu"></div>
+    <div class="container" id="contentArea"></div>
 
-<div class="zoom-controls">
-    <button class="zoom-btn home-btn" onclick="goHome()">🏠</button>
-    <button class="zoom-btn" onclick="changeZoom(0.1)">+</button>
-    <button class="zoom-btn" onclick="changeZoom(-0.1)">−</button>
+    <div class="zoom-controls">
+        <button class="zoom-btn home-btn logout-btn" onclick="logout()" title="लॉगआउट">🔓</button>
+        <button class="zoom-btn home-btn" onclick="goHome()">🏠</button>
+        <button class="zoom-btn" onclick="changeZoom(0.1)">+</button>
+        <button class="zoom-btn" onclick="changeZoom(-0.1)">−</button>
+    </div>
 </div>
 
 <script>
-    // 🎯 आपकी नई गूगल शीट आईडी यहाँ सफलतापूर्वक सेट कर दी गई है!
     const GOOGLE_SHEET_ID = "1dQW0F83Sn9hCOqVRSkIvtReOu31oh9tM0dF6cSNfyl0"; 
+
+    let rawDataList = []; // शीट का पूरा कच्चा डेटा स्टोर करने के लिए
+    let userAssignedPS = ""; // यूज़र का लॉक थाना
+    let isMasterUser = false; // क्या यूज़र बड़ा अधिकारी है?
 
     let shopData = {
         "asp": { title: "ASP", partners: [] },
@@ -183,6 +224,242 @@
     };
 
     const stationGroupKeys = ["police_stations", "si_asi", "constable", "nvf", "hg", "cv"];
+
+    window.onload = function() {
+        const savedTheme = localStorage.getItem('theme');
+        if(savedTheme === 'night') {
+            document.body.classList.add('night-mode');
+            updateModeButton(true);
+        }
+        // सबसे पहले बैकग्राउंड में गूगल शीट का लाइव डेटा लोड करें
+        loadGoogleSheetDirectly();
+    };
+
+    function loadGoogleSheetDirectly() {
+        const url = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=csv&gid=0&v=` + Date.now();
+
+        fetch(url)
+        .then(response => response.text())
+        .then(text => {
+            let cleanText = text.replace(/\r/g, ""); 
+            let lines = cleanText.split("\n");
+            if (lines.length === 0 || !lines[0].trim()) return;
+
+            let headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/^["']|["']$/g, ""));
+            
+            let typeIdx = headers.indexOf('type');
+            let psNameIdx = headers.indexOf('ps_name');
+            let forceTypeIdx = headers.indexOf('force_type');
+            let nameIdx = headers.indexOf('name');
+            let rankIdx = headers.indexOf('rank');
+            let mobileIdx = headers.indexOf('mobile');
+            let landlineIdx = headers.indexOf('landline');
+            let whatsappIdx = headers.indexOf('whatsapp');
+            let statusIdx = headers.indexOf('status');
+            let liveLocIdx = headers.indexOf('live_location');
+
+            rawDataList = []; // क्लियर करें
+
+            for(let i = 1; i < lines.length; i++) {
+                if(!lines[i].trim()) continue;
+                let cols = lines[i].split(',').map(c => c.trim().replace(/^["']|["']$/g, ""));
+                
+                let obj = {
+                    type: typeIdx !== -1 && cols[typeIdx] ? cols[typeIdx].trim().toLowerCase() : '',
+                    ps_name: psNameIdx !== -1 && cols[psNameIdx] ? cols[psNameIdx].trim() : '',
+                    force_type: forceTypeIdx !== -1 && cols[forceTypeIdx] ? cols[forceTypeIdx].trim() : 'Officer',
+                    name: nameIdx !== -1 && cols[nameIdx] ? cols[nameIdx].trim() : 'N/A',
+                    rank: rankIdx !== -1 && cols[rankIdx] ? cols[rankIdx].trim() : 'N/A',
+                    mobile: mobileIdx !== -1 && cols[mobileIdx] ? cols[mobileIdx].trim() : 'N/A',
+                    landline: landlineIdx !== -1 && cols[landlineIdx] ? cols[landlineIdx].trim() : '',
+                    whatsapp: whatsappIdx !== -1 && cols[whatsappIdx] ? cols[whatsappIdx].trim() : '',
+                    status: statusIdx !== -1 && cols[statusIdx] ? cols[statusIdx].trim() : 'Off-Duty',
+                    live_location: liveLocIdx !== -1 && cols[liveLocIdx] ? cols[liveLocIdx].trim() : 'N/A'
+                };
+                rawDataList.push(obj);
+            }
+
+            // अगर पहले से मोबाइल नंबर सेव्ड है तो ऑटो-लॉगिन करें (ताकि ट्रांसफर होने पर ऑटो-अपडेट हो)
+            const savedMobile = localStorage.getItem('userMobileNumber');
+            if (savedMobile) {
+                processLoginWithMobile(savedMobile, true); 
+            }
+        })
+        .catch(err => console.error("डेटा लोड करने में समस्या आई।", err));
+    }
+
+    function verifyLogin() {
+        const mobileInput = document.getElementById('userMobile').value.trim();
+        if (mobileInput.length < 10) {
+            alert("कृपया सही 10-अंकीय मोबाइल नंबर दर्ज करें!");
+            return;
+        }
+        processLoginWithMobile(mobileInput, false);
+    }
+
+    function processLoginWithMobile(mobileNum, isAutoLogin) {
+        // गूगल शीट के लाइव डेटा में यह नंबर ढूंढें
+        let matchedUser = rawDataList.find(u => u.mobile === mobileNum || u.whatsapp === mobileNum);
+
+        if (!matchedUser) {
+            document.getElementById('loginError').style.display = "block";
+            if(isAutoLogin) logout(); // अगर ऑटो-लॉगिन फेल हुआ तो स्क्रीन पर रखें
+            return;
+        }
+
+        document.getElementById('loginError').style.display = "none";
+        localStorage.setItem('userMobileNumber', mobileNum); // भविष्य के लिए नंबर सहेजें
+
+        // चेक करें कि क्या यह बड़ा अधिकारी (Master User) है
+        if (["asp", "sdpo", "dysp", "ci"].includes(matchedUser.type.toLowerCase())) {
+            isMasterUser = true;
+            userAssignedPS = "";
+        } else {
+            isMasterUser = false;
+            userAssignedPS = matchedUser.ps_name; // उनका वर्तमान थाना लॉक करें
+        }
+
+        // स्क्रीन बदलें
+        document.getElementById('loginScreen').style.display = "none";
+        document.getElementById('appContent').style.display = "block";
+
+        // डेटा को फ़िल्टर करके इंटरफ़ेस तैयार करें
+        buildDynamicUI();
+    }
+
+    function buildDynamicUI() {
+        // डेटा स्ट्रक्चर रीसेट करें
+        Object.keys(shopData).forEach(key => shopData[key].partners = []);
+
+        rawDataList.forEach(obj => {
+            if(!obj.type) return;
+
+            // अगर सामान्य पुलिसकर्मी है, तो केवल उसके लॉक थाने का ही डेटा लोड होगा
+            if (!isMasterUser && obj.type === "police_stations" && obj.ps_name !== userAssignedPS) {
+                return; // दूसरे थानों का डेटा छोड़ दें (Hide कर दें)
+            }
+
+            if (obj.type === "police_stations") {
+                let forceKey = obj.force_type.toLowerCase().trim();
+                if (forceKey === "si & asi") forceKey = "si_asi";
+                
+                if (forceKey === "officer") {
+                    shopData["police_stations"].partners.push(obj);
+                } else if (shopData[forceKey]) {
+                    shopData[forceKey].partners.push(obj);
+                }
+            } else if(shopData[obj.type]) {
+                shopData[obj.type].partners.push(obj);
+            }
+        });
+
+        init();
+    }
+
+    function init() {
+        stationGroupKeys.forEach(key => {
+            if(shopData[key] && shopData[key].partners) {
+                shopData[key].partners.sort((a, b) => a.ps_name.localeCompare(b.ps_name));
+            }
+        });
+        
+        const tabMenu = document.getElementById('tabMenu');
+        const contentArea = document.getElementById('contentArea');
+        
+        tabMenu.innerHTML = "";
+        contentArea.innerHTML = "";
+
+        createTab("📂 DIRECTORY", "directory", true);
+        
+        // यदि यूजर बड़े अधिकारी नहीं हैं, तो उन्हें फालतू के खाली बटन्स (ASP, SDPO) नहीं दिखेंगे
+        Object.keys(shopData).forEach(key => {
+            if (isMasterUser || shopData[key].partners.length > 0) {
+                createTab(shopData[key].title, key, false);
+            }
+        });
+
+        const dirSection = document.createElement('div');
+        dirSection.id = 'directory';
+        dirSection.className = "section active";
+        
+        let allHtml = "";
+
+        Object.keys(shopData).forEach(key => {
+            if (shopData[key].partners.length === 0) return;
+
+            const section = document.createElement('div');
+            section.id = key;
+            section.className = "section";
+            let html = "";
+            
+            if (stationGroupKeys.includes(key)) {
+                const grouped = {};
+                shopData[key].partners.forEach(p => {
+                    let psName = p.ps_name || 'Unknown';
+                    if (!grouped[psName]) grouped[psName] = [];
+                    grouped[psName].push(p);
+                });
+                Object.keys(grouped).forEach(psName => {
+                    html += `
+                        <div class="ps-header" onclick="togglePS(this)">
+                            <span>🚨 ${psName} Police Station</span>
+                            <span class="ps-icon">▼</span>
+                        </div>
+                        <div class="ps-content open">
+                            ${grouped[psName].map(p => createCard(p)).join('')}
+                        </div>`;
+                });
+            } else {
+                html = shopData[key].partners.map(p => createCard(p)).join('');
+            }
+            
+            section.innerHTML = html;
+            allHtml += html;
+            contentArea.appendChild(section);
+        });
+        
+        dirSection.innerHTML = allHtml;
+        contentArea.prepend(dirSection);
+
+        document.getElementById('globalSearch').onkeyup = globalFilter;
+    }
+
+    function createTab(text, id, active) {
+        const btn = document.createElement('button');
+        btn.className = `tab-btn ${active ? 'active' : ''}`;
+        btn.innerText = text;
+        btn.onclick = (e) => showSection(id, e.target);
+        document.getElementById('tabMenu').appendChild(btn);
+    }
+
+    function createCard(p) {
+        let forceType = (p.force_type || 'Officer').trim();
+        let isOnline = p.status.toLowerCase() === 'duty' || p.status.toLowerCase() === 'on-duty';
+        let badgeClass = isOnline ? 'on' : 'off';
+        let badgeText = isOnline ? '🟢 On Duty' : '🔴 Off Duty';
+        let locationText = isOnline ? `<p>📍 <b>Live Location:</b> ${p.live_location}</p>` : '';
+
+        return `
+            <div class="list-card">
+                <span class="status-badge ${badgeClass}">${badgeText}</span>
+                <h3 style="color:var(--police-blue); margin-top:0; font-weight:900; font-size: 20px; padding-right: 90px;">${p.name || 'N/A'}</h3>
+                <p>🎖️ <b>Rank:</b> ${p.rank || 'N/A'} (${forceType})</p>
+                <p>📞 <b>Mobile:</b> ${p.mobile || 'N/A'}</p>
+                ${locationText}
+                <div class="btn-group">
+                    <a href="tel:${p.mobile}" class="action-btn">📞 CALL</a>
+                    ${p.landline ? `<a href="tel:${p.landline}" class="action-btn">☎️ LANDLINE</a>` : ""}
+                    <a href="https://wa.me/${p.whatsapp}" class="action-btn">💬 WHATSAPP</a>
+                </div>
+            </div>`;
+    }
+
+    function logout() {
+        localStorage.removeItem('userMobileNumber');
+        document.getElementById('appContent').style.display = "none";
+        document.getElementById('loginScreen').style.display = "flex";
+        document.getElementById('userMobile').value = "";
+    }
 
     function toggleNightMode() {
         document.body.classList.toggle('night-mode');
@@ -221,160 +498,6 @@
         }
     }
 
-    window.onload = function() {
-        const savedTheme = localStorage.getItem('theme');
-        if(savedTheme === 'night') {
-            document.body.classList.add('night-mode');
-            updateModeButton(true);
-        }
-        loadGoogleSheetDirectly();
-    };
-
-    function loadGoogleSheetDirectly() {
-        // कैशे बस्टर तकनीक ताकि गूगल शीट एडिट करते ही तुरंत वेबसाइट पर बदलाव दिखे
-        const url = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=csv&gid=0&v=` + Date.now();
-
-        fetch(url)
-        .then(response => response.text())
-        .then(text => {
-            let cleanText = text.replace(/\r/g, ""); 
-            let lines = cleanText.split("\n");
-            if (lines.length === 0 || !lines[0].trim()) { init(); return; }
-
-            let headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/^["']|["']$/g, ""));
-            
-            let typeIdx = headers.indexOf('type');
-            let psNameIdx = headers.indexOf('ps_name');
-            let forceTypeIdx = headers.indexOf('force_type');
-            let nameIdx = headers.indexOf('name');
-            let rankIdx = headers.indexOf('rank');
-            let mobileIdx = headers.indexOf('mobile');
-            let landlineIdx = headers.indexOf('landline');
-            let whatsappIdx = headers.indexOf('whatsapp');
-
-            for(let i = 1; i < lines.length; i++) {
-                if(!lines[i].trim()) continue;
-                
-                let cols = lines[i].split(',').map(c => c.trim().replace(/^["']|["']$/g, ""));
-                
-                let obj = {
-                    type: typeIdx !== -1 && cols[typeIdx] ? cols[typeIdx].trim().toLowerCase() : '',
-                    ps_name: psNameIdx !== -1 && cols[psNameIdx] ? cols[psNameIdx].trim() : '',
-                    force_type: forceTypeIdx !== -1 && cols[forceTypeIdx] ? cols[forceTypeIdx].trim() : 'Officer',
-                    name: nameIdx !== -1 && cols[nameIdx] ? cols[nameIdx].trim() : 'N/A',
-                    rank: rankIdx !== -1 && cols[rankIdx] ? cols[rankIdx].trim() : 'N/A',
-                    mobile: mobileIdx !== -1 && cols[mobileIdx] ? cols[mobileIdx].trim() : 'N/A',
-                    landline: landlineIdx !== -1 && cols[landlineIdx] ? cols[landlineIdx].trim() : '',
-                    whatsapp: whatsappIdx !== -1 && cols[whatsappIdx] ? cols[whatsappIdx].trim() : ''
-                };
-                
-                if(obj.type) {
-                    if (obj.type === "police_stations") {
-                        let forceKey = obj.force_type.toLowerCase().trim();
-                        if (forceKey === "si & asi") forceKey = "si_asi";
-                        
-                        if (forceKey === "officer") {
-                            shopData["police_stations"].partners.push(obj);
-                        } else if (shopData[forceKey]) {
-                            shopData[forceKey].partners.push(obj);
-                        }
-                    } else if(shopData[obj.type]) {
-                        shopData[obj.type].partners.push(obj);
-                    }
-                }
-            }
-            init();
-        })
-        .catch(err => {
-            console.error("गूगल शीट लोड करने में समस्या आई।", err);
-            init();
-        });
-    }
-
-    function init() {
-        stationGroupKeys.forEach(key => {
-            if(shopData[key] && shopData[key].partners) {
-                shopData[key].partners.sort((a, b) => a.ps_name.localeCompare(b.ps_name));
-            }
-        });
-        
-        const tabMenu = document.getElementById('tabMenu');
-        const contentArea = document.getElementById('contentArea');
-        
-        tabMenu.innerHTML = "";
-        contentArea.innerHTML = "";
-
-        createTab("📂 DIRECTORY", "directory", true);
-        Object.keys(shopData).forEach(key => createTab(shopData[key].title, key, false));
-
-        const dirSection = document.createElement('div');
-        dirSection.id = 'directory';
-        dirSection.className = "section active";
-        
-        let allHtml = "";
-
-        Object.keys(shopData).forEach(key => {
-            const section = document.createElement('div');
-            section.id = key;
-            section.className = "section";
-            let html = "";
-            
-            if (stationGroupKeys.includes(key)) {
-                const grouped = {};
-                shopData[key].partners.forEach(p => {
-                    let psName = p.ps_name || 'Unknown';
-                    if (!grouped[psName]) grouped[psName] = [];
-                    grouped[psName].push(p);
-                });
-                Object.keys(grouped).forEach(psName => {
-                    html += `
-                        <div class="ps-header" onclick="togglePS(this)">
-                            <span>🚨 ${psName} Police Station</span>
-                            <span class="ps-icon">▼</span>
-                        </div>
-                        <div class="ps-content">
-                            ${grouped[psName].map(p => createCard(p)).join('')}
-                        </div>`;
-                });
-            } else {
-                html = shopData[key].partners.map(p => createCard(p)).join('');
-            }
-            
-            section.innerHTML = html;
-            allHtml += html;
-            contentArea.appendChild(section);
-        });
-        
-        dirSection.innerHTML = allHtml;
-        contentArea.prepend(dirSection);
-
-        document.getElementById('globalSearch').onkeyup = globalFilter;
-    }
-
-    function createTab(text, id, active) {
-        const btn = document.createElement('button');
-        btn.className = `tab-btn ${active ? 'active' : ''}`;
-        btn.innerText = text;
-        btn.onclick = (e) => showSection(id, e.target);
-        document.getElementById('tabMenu').appendChild(btn);
-    }
-
-    // खूबसूरत और रेस्पॉन्सिव कॉलिंग कार्ड संरचना
-    function createCard(p) {
-        let forceType = (p.force_type || 'Officer').trim();
-        return `
-            <div class="list-card">
-                <h3 style="color:var(--police-blue); margin-top:0; font-weight:900; font-size: 20px;">${p.name || 'N/A'}</h3>
-                <p>🎖️ <b>Rank:</b> ${p.rank || 'N/A'} (${forceType})</p>
-                <p>📞 <b>Mobile:</b> ${p.mobile || 'N/A'}</p>
-                <div class="btn-group">
-                    <a href="tel:${p.mobile}" class="action-btn">📞 CALL</a>
-                    ${p.landline ? `<a href="tel:${p.landline}" class="action-btn">☎️ LANDLINE</a>` : ""}
-                    <a href="https://wa.me/${p.whatsapp}" class="action-btn">💬 WHATSAPP</a>
-                </div>
-            </div>`;
-    }
-
     function showSection(id, btn) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -391,10 +514,6 @@
             cards.forEach(card => {
                 const isMatch = card.innerText.toLowerCase().includes(term);
                 card.style.display = isMatch ? "block" : "none";
-                if (term.length > 0 && isMatch) {
-                    const parent = card.closest('.ps-content');
-                    if (parent) parent.classList.add('open');
-                }
             });
         }
     }
