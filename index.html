@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUPERINTENDENT OF POLICE – Paschim Medinipur</title>
+    <style>
+        * { box-sizing: border-box; transition: background 0.3s, color 0.3s; }
+        
+        :root { 
+            --police-blue: #FF6600;   
+            --light-green: #FF7700;   
+            --green-shadow: #cc4400;  
+            --dark-bg: #1a1a1a; 
+            --white-bg: #ffffff; 
+            --text-color: #000000;
+            --card-text-mute: #555555; 
+            --card-bg: #ffffff;
+            --btn-blue: #d32f2f;      
+            --btn-orange: #FF9933;   
+        }
+
+        body.night-mode {
+            --white-bg: #121212;
+            --text-color: #ffffff;
+            --card-text-mute: #dddddd; 
+            --card-bg: #1e1e1e;
+            --dark-bg: #000000;
+        }
+        
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            margin: 0; padding: 0; 
+            background-color: var(--white-bg); 
+            color: var(--text-color);
+            overflow-x: hidden; 
+            transform-origin: top center;
+        }
+
+        .main-header { 
+            text-align: center; 
+            background-color: var(--police-blue); 
+            padding: 25px 10px 15px 10px; 
+            color: #ffffff; 
+            border-bottom: 4px solid #cc5200;
+        }
+        .main-title { font-size: clamp(24px, 6vw, 40px); font-weight: 900; margin: 0; text-transform: uppercase; }
+
+        .top-actions {
+            background: var(--dark-bg);
+            padding: 15px 10px;
+            display: flex;
+            justify-content: center;
+            gap: 8px; 
+            flex-wrap: wrap; 
+        }
+        
+        .mode-btn, .links-btn { 
+            padding: 12px 10px; border-radius: 10px; font-weight: 900; border: none; cursor: pointer;
+            font-size: 12px; min-width: 100px; flex: 1; max-width: 150px; text-align: center; text-transform: uppercase;
+        }
+
+        .mode-btn { background-color: var(--light-green); color: #fff; box-shadow: 0 4px 0 var(--green-shadow); }
+        .links-btn.blue { background-color: var(--btn-blue); box-shadow: 0 4px 0 #9a1f1f; color: white; }
+        .links-btn.orange { background-color: var(--btn-orange); box-shadow: 0 4px 0 #cc7a29; color: white; }
+
+        /* Modals */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 9999; padding: 20px;
+        }
+        .modal-content {
+            background: var(--card-bg); color: var(--text-color); max-width: 500px;
+            margin: 40px auto; padding: 20px; border-radius: 20px; border: 5px solid var(--light-green);
+        }
+        .link-item {
+            display: block; background: var(--light-green); color: #fff; padding: 15px;
+            margin: 10px 0; text-decoration: none; text-align: center; font-weight: bold;
+            border-radius: 10px; box-shadow: 0 3px 0 var(--green-shadow);
+        }
+
+        /* Search & Nav Borders */
+        .search-container { background: var(--dark-bg); padding: 0 15px 15px 15px; border-bottom: 3px solid var(--light-green); }
+        .global-search-bar { width: 100%; max-width: 600px; padding: 15px; border-radius: 50px; border: 3px solid var(--light-green); font-size: 18px; display: block; margin: 0 auto; outline: none; }
+
+        .nav-container { background-color: var(--dark-bg); padding: 15px 0; position: sticky; top: 0; z-index: 1000; display: flex; gap: 10px; border-bottom: 4px solid var(--light-green); overflow-x: auto; padding-left: 10px; scrollbar-width: none; }
+        .tab-btn { font-size: 14px; padding: 10px 20px; font-weight: 900; cursor: pointer; border-radius: 50px; background-color: var(--light-green); color: #fff; border: none; white-space: nowrap; box-shadow: 0 4px 0 var(--green-shadow); }
+        
+        .tab-btn.active, .nav-container button.active, #tabMenu button.active { 
+            background-color: #ffffff !important; 
+            color: #000000 !important; 
+            transform: translateY(3px); 
+            box-shadow: 0 2px 0 var(--green-shadow); 
+        }
+
+        .container { padding: 15px; max-width: 1100px; margin: auto; padding-bottom: 120px; }
+        .section { display: none; }
+        .section.active { display: block; }
+        
+        .list-card { background: var(--card-bg); padding: 20px; border-radius: 20px; border: 5px solid var(--light-green); margin-bottom: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); color: var(--text-color); }
+        .list-card p { color: var(--card-text-mute); margin: 8px 0; }
+        .list-card p b { color: var(--text-color); }
+        
+        .ps-header {
+            background-color: var(--dark-bg); color: #ffffff; padding: 15px;
+            margin-bottom: 10px; border-radius: 15px; cursor: pointer; font-weight: 900;
+            display: flex; justify-content: space-between; align-items: center; border: 2px solid var(--light-green);
+        }
+        .ps-content { display: none; padding-top: 10px; }
+        .ps-content.open { display: block; }
+
+        .btn-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; margin-top: 15px; }
+        .action-btn { padding: 12px 5px; text-decoration: none; color: #fff; border-radius: 50px; text-align: center; font-weight: 900; background-color: var(--light-green); border: none; font-size: 11px; }
+        
+        .zoom-controls { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 4000; }
+        .zoom-btn { width: 50px; height: 50px; border-radius: 50%; background-color: var(--light-green); border: 3px solid var(--green-shadow); font-size: 24px; font-weight: 900; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .home-btn { background-color: var(--btn-blue); border-color: #9a1f1f; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="main-header">
+    <h1 class="main-title">SUPERINTENDENT OF POLICE</h1>
+    <div class="main-subtitle">PASCHIM MEDINIPUR</div>
+</div>
+
+<div class="top-actions">
+    <button class="mode-btn" onclick="toggleNightMode()" id="modeBtn">🌙 NIGHT MODE</button>
+    <button class="links-btn blue" onclick="toggleModal('quickLinksModal')">🌐 QUICK LINKS</button>
+    <button class="links-btn orange" onclick="toggleModal('importantLinksModal')">📌 IMPORTANT SITES</button>
+</div>
+
+<div id="quickLinksModal" class="modal">
+    <div class="modal-content">
+        <h2 style="text-align:center;">🌐 Quick Links</h2><hr>
+        <div style="max-height: 350px; overflow-y: auto;">
+            <a href="https://wmdppolicekhoj.co.in/" target="_blank" class="link-item">Khoj (Police Dept)</a>
+            <a href="https://www.google.com" target="_blank" class="link-item">Google Search</a>
+        </div>
+        <button onclick="toggleModal('quickLinksModal')" style="width:100%; padding:10px; background:#ff4d4d; color:white; border:none; border-radius:10px; margin-top:10px; font-weight:bold; cursor:pointer;">CLOSE</button>
+    </div>
+</div>
+
+<div id="importantLinksModal" class="modal">
+    <div class="modal-content">
+        <h2 style="text-align:center;">📌 Important Sites</h2><hr>
+        <div style="max-height: 350px; overflow-y: auto;">
+            <a href="https://westbengalpolice.gov.in/" target="_blank" class="link-item">West Bengal Police</a>
+            <a href="https://paschimmedinipur.gov.in/" target="_blank" class="link-item">District Website</a>
+        </div>
+        <button onclick="toggleModal('importantLinksModal')" style="width:100%; padding:10px; background:#ff4d4d; color:white; border:none; border-radius:10px; margin-top:10px; font-weight:bold; cursor:pointer;">CLOSE</button>
+    </div>
+</div>
+
+<div class="search-container">
+    <input type="text" id="globalSearch" class="global-search-bar" placeholder="खोजें...">
+</div>
+
+<div class="nav-container" id="tabMenu"></div>
+<div class="container" id="contentArea"></div>
+
+<div class="zoom-controls">
+    <button class="zoom-btn home-btn" onclick="goHome()">🏠</button>
+    <button class="zoom-btn" onclick="changeZoom(0.1)">+</button>
+    <button class="zoom-btn" onclick="changeZoom(-0.1)">−</button>
+</div>
+
+<script>
+    // 🎯 आपकी नई गूगल शीट आईडी यहाँ सफलतापूर्वक सेट कर दी गई है!
+    const GOOGLE_SHEET_ID = "1dQW0F83Sn9hCOqVRSkIvtReOu31oh9tM0dF6cSNfyl0"; 
+
+    let shopData = {
+        "asp": { title: "ASP", partners: [] },
+        "sdpo": { title: "SDPO", partners: [] },
+        "dysp": { title: "DySP", partners: [] },
+        "ci": { title: "CI", partners: [] },
+        "police_stations": { title: "IC & OC", partners: [] },
+        "si_asi": { title: "SI & ASI", partners: [] },
+        "constable": { title: "CONSTABLE", partners: [] },
+        "nvf": { title: "NVF", partners: [] },
+        "hg": { title: "HG", partners: [] },
+        "cv": { title: "CV", partners: [] }
+    };
+
+    const stationGroupKeys = ["police_stations", "si_asi", "constable", "nvf", "hg", "cv"];
+
+    function toggleNightMode() {
+        document.body.classList.toggle('night-mode');
+        const isNight = document.body.classList.contains('night-mode');
+        localStorage.setItem('theme', isNight ? 'night' : 'light');
+        updateModeButton(isNight);
+    }
+
+    function updateModeButton(isNight) {
+        const btn = document.getElementById('modeBtn');
+        if (btn) btn.innerHTML = isNight ? "☀️ LIGHT MODE" : "🌙 NIGHT MODE";
+    }
+
+    function toggleModal(id) {
+        const m = document.getElementById(id);
+        if (m) m.style.display = (m.style.display === "block") ? "none" : "block";
+    }
+
+    function changeZoom(delta) {
+        let currentZoom = parseFloat(document.body.style.zoom) || 1.0;
+        currentZoom += delta;
+        document.body.style.zoom = Math.min(Math.max(currentZoom, 0.8), 1.5);
+    }
+
+    function goHome() { location.reload(); }
+
+    function togglePS(header) {
+        const content = header.nextElementSibling;
+        const icon = header.querySelector('.ps-icon');
+        if (content.classList.contains('open')) {
+            content.classList.remove('open');
+            icon.innerText = '▼';
+        } else {
+            content.classList.add('open');
+            icon.innerText = '▲';
+        }
+    }
+
+    window.onload = function() {
+        const savedTheme = localStorage.getItem('theme');
+        if(savedTheme === 'night') {
+            document.body.classList.add('night-mode');
+            updateModeButton(true);
+        }
+        loadGoogleSheetDirectly();
+    };
+
+    function loadGoogleSheetDirectly() {
+        // कैशे बस्टर तकनीक ताकि गूगल शीट एडिट करते ही तुरंत वेबसाइट पर बदलाव दिखे
+        const url = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=csv&gid=0&v=` + Date.now();
+
+        fetch(url)
+        .then(response => response.text())
+        .then(text => {
+            let cleanText = text.replace(/\r/g, ""); 
+            let lines = cleanText.split("\n");
+            if (lines.length === 0 || !lines[0].trim()) { init(); return; }
+
+            let headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/^["']|["']$/g, ""));
+            
+            let typeIdx = headers.indexOf('type');
+            let psNameIdx = headers.indexOf('ps_name');
+            let forceTypeIdx = headers.indexOf('force_type');
+            let nameIdx = headers.indexOf('name');
+            let rankIdx = headers.indexOf('rank');
+            let mobileIdx = headers.indexOf('mobile');
+            let landlineIdx = headers.indexOf('landline');
+            let whatsappIdx = headers.indexOf('whatsapp');
+
+            for(let i = 1; i < lines.length; i++) {
+                if(!lines[i].trim()) continue;
+                
+                let cols = lines[i].split(',').map(c => c.trim().replace(/^["']|["']$/g, ""));
+                
+                let obj = {
+                    type: typeIdx !== -1 && cols[typeIdx] ? cols[typeIdx].trim().toLowerCase() : '',
+                    ps_name: psNameIdx !== -1 && cols[psNameIdx] ? cols[psNameIdx].trim() : '',
+                    force_type: forceTypeIdx !== -1 && cols[forceTypeIdx] ? cols[forceTypeIdx].trim() : 'Officer',
+                    name: nameIdx !== -1 && cols[nameIdx] ? cols[nameIdx].trim() : 'N/A',
+                    rank: rankIdx !== -1 && cols[rankIdx] ? cols[rankIdx].trim() : 'N/A',
+                    mobile: mobileIdx !== -1 && cols[mobileIdx] ? cols[mobileIdx].trim() : 'N/A',
+                    landline: landlineIdx !== -1 && cols[landlineIdx] ? cols[landlineIdx].trim() : '',
+                    whatsapp: whatsappIdx !== -1 && cols[whatsappIdx] ? cols[whatsappIdx].trim() : ''
+                };
+                
+                if(obj.type) {
+                    if (obj.type === "police_stations") {
+                        let forceKey = obj.force_type.toLowerCase().trim();
+                        if (forceKey === "si & asi") forceKey = "si_asi";
+                        
+                        if (forceKey === "officer") {
+                            shopData["police_stations"].partners.push(obj);
+                        } else if (shopData[forceKey]) {
+                            shopData[forceKey].partners.push(obj);
+                        }
+                    } else if(shopData[obj.type]) {
+                        shopData[obj.type].partners.push(obj);
+                    }
+                }
+            }
+            init();
+        })
+        .catch(err => {
+            console.error("गूगल शीट लोड करने में समस्या आई।", err);
+            init();
+        });
+    }
+
+    function init() {
+        stationGroupKeys.forEach(key => {
+            if(shopData[key] && shopData[key].partners) {
+                shopData[key].partners.sort((a, b) => a.ps_name.localeCompare(b.ps_name));
+            }
+        });
+        
+        const tabMenu = document.getElementById('tabMenu');
+        const contentArea = document.getElementById('contentArea');
+        
+        tabMenu.innerHTML = "";
+        contentArea.innerHTML = "";
+
+        createTab("📂 DIRECTORY", "directory", true);
+        Object.keys(shopData).forEach(key => createTab(shopData[key].title, key, false));
+
+        const dirSection = document.createElement('div');
+        dirSection.id = 'directory';
+        dirSection.className = "section active";
+        
+        let allHtml = "";
+
+        Object.keys(shopData).forEach(key => {
+            const section = document.createElement('div');
+            section.id = key;
+            section.className = "section";
+            let html = "";
+            
+            if (stationGroupKeys.includes(key)) {
+                const grouped = {};
+                shopData[key].partners.forEach(p => {
+                    let psName = p.ps_name || 'Unknown';
+                    if (!grouped[psName]) grouped[psName] = [];
+                    grouped[psName].push(p);
+                });
+                Object.keys(grouped).forEach(psName => {
+                    html += `
+                        <div class="ps-header" onclick="togglePS(this)">
+                            <span>🚨 ${psName} Police Station</span>
+                            <span class="ps-icon">▼</span>
+                        </div>
+                        <div class="ps-content">
+                            ${grouped[psName].map(p => createCard(p)).join('')}
+                        </div>`;
+                });
+            } else {
+                html = shopData[key].partners.map(p => createCard(p)).join('');
+            }
+            
+            section.innerHTML = html;
+            allHtml += html;
+            contentArea.appendChild(section);
+        });
+        
+        dirSection.innerHTML = allHtml;
+        contentArea.prepend(dirSection);
+
+        document.getElementById('globalSearch').onkeyup = globalFilter;
+    }
+
+    function createTab(text, id, active) {
+        const btn = document.createElement('button');
+        btn.className = `tab-btn ${active ? 'active' : ''}`;
+        btn.innerText = text;
+        btn.onclick = (e) => showSection(id, e.target);
+        document.getElementById('tabMenu').appendChild(btn);
+    }
+
+    // खूबसूरत और रेस्पॉन्सिव कॉलिंग कार्ड संरचना
+    function createCard(p) {
+        let forceType = (p.force_type || 'Officer').trim();
+        return `
+            <div class="list-card">
+                <h3 style="color:var(--police-blue); margin-top:0; font-weight:900; font-size: 20px;">${p.name || 'N/A'}</h3>
+                <p>🎖️ <b>Rank:</b> ${p.rank || 'N/A'} (${forceType})</p>
+                <p>📞 <b>Mobile:</b> ${p.mobile || 'N/A'}</p>
+                <div class="btn-group">
+                    <a href="tel:${p.mobile}" class="action-btn">📞 CALL</a>
+                    ${p.landline ? `<a href="tel:${p.landline}" class="action-btn">☎️ LANDLINE</a>` : ""}
+                    <a href="https://wa.me/${p.whatsapp}" class="action-btn">💬 WHATSAPP</a>
+                </div>
+            </div>`;
+    }
+
+    function showSection(id, btn) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        const target = document.getElementById(id);
+        if (target) target.classList.add('active');
+        btn.classList.add('active');
+    }
+
+    function globalFilter() {
+        const term = document.getElementById('globalSearch').value.toLowerCase();
+        const activeSection = document.querySelector('.section.active');
+        if (activeSection) {
+            const cards = activeSection.querySelectorAll('.list-card');
+            cards.forEach(card => {
+                const isMatch = card.innerText.toLowerCase().includes(term);
+                card.style.display = isMatch ? "block" : "none";
+                if (term.length > 0 && isMatch) {
+                    const parent = card.closest('.ps-content');
+                    if (parent) parent.classList.add('open');
+                }
+            });
+        }
+    }
+</script>
+</body>
+</html>
