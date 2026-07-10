@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SUPERINTENDENT OF POLICE – Paschim Medinipur</title>
     <style>
-        * { box-sizing: border-box; transition: background 0.3s, color 0.3s; }
+        * { box-sizing: border-box; transition: background 0.2s, color 0.2s; }
         
         :root { 
             --police-blue: #FF6600;   
@@ -36,6 +36,7 @@
             background-color: var(--white-bg); 
             color: var(--text-color);
             overflow-x: hidden; 
+            -webkit-font-smoothing: antialiased;
         }
 
         #loginScreen {
@@ -107,7 +108,7 @@
         .search-container { background: var(--dark-bg); padding: 0 15px 15px 15px; border-bottom: 3px solid var(--light-green); }
         .global-search-bar { width: 100%; max-width: 600px; padding: 15px; border-radius: 50px; border: 3px solid var(--light-green); font-size: 18px; display: block; margin: 0 auto; outline: none; }
 
-        /* 🚀 बटन्स के बाएँ-दाएँ स्क्रॉल को सुपर-फास्ट और मक्खन जैसा स्मूथ बनाने का अपडेट */
+        /* 🔥 हार्वेस्टेड सुपर-ऑप्टिमाइज़्ड स्क्रॉल बार (GPU Accelerated) */
         .nav-container { 
             background-color: var(--dark-bg); 
             padding: 15px 0; 
@@ -119,19 +120,26 @@
             border-bottom: 4px solid var(--light-green); 
             overflow-x: auto; 
             padding-left: 10px; 
-            scrollbar-width: none; /* फ़ायरफ़ॉक्स के लिए स्क्रॉलबार छिपाएँ */
+            scrollbar-width: none;
             
-            /* नीचे दी गई लाइनें मोबाइल पर टच रिस्पॉन्स को 10x तेज कर देती हैं */
+            /* हार्डवेयर त्वरण (Hardware Acceleration) */
+            transform: translate3d(0, 0, 0);
+            will-change: transform;
             -webkit-overflow-scrolling: touch; 
             scroll-behavior: smooth; 
             overscroll-behavior-x: contain;
+            touch-action: pan-x; /* केवल लेफ्ट-राइट टच पर फोकस */
         }
-        /* क्रोम और सफारी के लिए स्क्रॉलबार छुपाना */
-        .nav-container::-webkit-scrollbar {
-            display: none;
-        }
+        .nav-container::-webkit-scrollbar { display: none; }
         
-        .tab-btn { font-size: 14px; padding: 10px 20px; font-weight: 900; cursor: pointer; border-radius: 50px; background-color: var(--light-green); color: #fff; border: none; white-space: nowrap; box-shadow: 0 4px 0 var(--green-shadow); }
+        /* स्क्रॉल करते समय बटन्स का एनिमेशन लोड कम करने के लिए transition: none */
+        .tab-btn { 
+            font-size: 14px; padding: 10px 20px; font-weight: 900; cursor: pointer; 
+            border-radius: 50px; background-color: var(--light-green); color: #fff; 
+            border: none; white-space: nowrap; box-shadow: 0 4px 0 var(--green-shadow);
+            transition: none !important; 
+            will-change: transform;
+        }
         .tab-btn.active { background-color: #ffffff !important; color: #000000 !important; transform: translateY(3px); box-shadow: 0 2px 0 var(--green-shadow); }
 
         .container { padding: 15px; max-width: 1100px; margin: auto; padding-bottom: 120px; }
@@ -516,7 +524,7 @@
         if (target) target.classList.add('active');
         btn.classList.add('active');
         
-        // 🎯 अतिरिक्त स्मार्ट फ़ीचर: बटन दबाते ही वह बटन खुद सेंटर में स्क्रॉल हो जाएगा
+        // बिना किसी रुकावट के तुरंत स्मूथ स्क्रॉल
         btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
 
