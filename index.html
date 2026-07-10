@@ -86,19 +86,12 @@
 
         /* अटेंडेंस डैशबोर्ड */
         .attendance-panel {
-            background: var(--dark-bg);
-            padding: 20px 15px;
-            text-align: center;
+            background: var(--dark-bg); padding: 20px 15px; text-align: center;
             border-bottom: 3px solid var(--light-green);
         }
         .attendance-box {
-            background: var(--card-bg);
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            border-radius: 20px;
-            border: 4px solid var(--police-blue);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            background: var(--card-bg); max-width: 600px; margin: 0 auto; padding: 20px;
+            border-radius: 20px; border: 4px solid var(--police-blue); box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
         .post-input {
             width: 85%; padding: 12px; border-radius: 50px;
@@ -112,6 +105,21 @@
         }
         .duty-master-btn.join { background-color: #4cd137; box-shadow: 0 4px 0 #389526; }
         .duty-master-btn.leave { background-color: #c23616; box-shadow: 0 4px 0 #8c260f; }
+
+        /* 🔒 मोडल्स (पॉप-अप विंडो) की सही सेटिंग */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 99999; padding: 20px;
+        }
+        .modal-content {
+            background: var(--card-bg); color: var(--text-color); max-width: 500px;
+            margin: 40px auto; padding: 20px; border-radius: 20px; border: 5px solid var(--light-green);
+        }
+        .link-item {
+            display: block; background: var(--light-green); color: #fff; padding: 15px;
+            margin: 10px 0; text-decoration: none; text-align: center; font-weight: bold;
+            border-radius: 10px; box-shadow: 0 3px 0 var(--green-shadow);
+        }
 
         .search-container { background: var(--dark-bg); padding: 0 15px 15px 15px; border-bottom: 3px solid var(--light-green); }
         .global-search-bar { width: 100%; max-width: 600px; padding: 15px; border-radius: 50px; border: 3px solid var(--light-green); font-size: 18px; display: block; margin: 0 auto; outline: none; }
@@ -192,7 +200,7 @@
             <h3 id="panelWelcome" style="margin-top:0; color:var(--police-blue);">जय हिन्द, ऑफिसर</h3>
             <div id="dutyFormArea">
                 <input type="text" id="dutyPostName" class="post-input" placeholder="ड्यूटी पोस्ट/स्थान का नाम लिखें...">
-                <button class="duty-master-btn join" onclick="handleDutyAction('join')">🚨 JOIN DUTY (حاضری दर्ज करें)</button>
+                <button class="duty-master-btn join" onclick="handleDutyAction('join')">🚨 JOIN DUTY (حاضरी दर्ज करें)</button>
             </div>
             <div id="leaveFormArea" style="display:none;">
                 <p style="font-weight:bold; color:#ff7700;">आप वर्तमान में ऑन-ड्यूटी हैं।</p>
@@ -202,19 +210,25 @@
         </div>
     </div>
 
+    <!-- 🎯 फिक्स किया गया क्विक लिंक्स मोडल विंडो -->
     <div id="quickLinksModal" class="modal">
         <div class="modal-content">
-            <h2 style="text-align:center;">🌐 Quick Links</h2><hr>
-            <a href="https://wmdppolicekhoj.co.in/" target="_blank" class="link-item">Khoj (Police Dept)</a>
-            <button onclick="toggleModal('quickLinksModal')" style="width:100%; padding:10px; background:#ff4d4d; color:white; border:none; border-radius:10px; margin-top:10px; font-weight:bold;">CLOSE</button>
+            <h2 style="text-align:center; margin-top:0;">🌐 Quick Links</h2><hr>
+            <div style="max-height: 250px; overflow-y: auto;">
+                <a href="https://wmdppolicekhoj.co.in/" target="_blank" class="link-item">Khoj (Police Dept)</a>
+            </div>
+            <button onclick="toggleModal('quickLinksModal')" style="width:100%; padding:12px; background:#d32f2f; color:white; border:none; border-radius:50px; margin-top:15px; font-weight:bold; cursor:pointer;">CLOSE</button>
         </div>
     </div>
 
+    <!-- 🎯 फिक्स किया गया इम्पोर्टेन्ट साइट्स मोडल विंडो -->
     <div id="importantLinksModal" class="modal">
         <div class="modal-content">
-            <h2 style="text-align:center;">📌 Important Sites</h2><hr>
-            <a href="https://westbengalpolice.gov.in/" target="_blank" class="link-item">West Bengal Police</a>
-            <button onclick="toggleModal('importantLinksModal')" style="width:100%; padding:10px; background:#ff4d4d; color:white; border:none; border-radius:10px; margin-top:10px; font-weight:bold;">CLOSE</button>
+            <h2 style="text-align:center; margin-top:0;">📌 Important Sites</h2><hr>
+            <div style="max-height: 250px; overflow-y: auto;">
+                <a href="https://westbengalpolice.gov.in/" target="_blank" class="link-item">West Bengal Police</a>
+            </div>
+            <button onclick="toggleModal('importantLinksModal')" style="width:100%; padding:12px; background:#d32f2f; color:white; border:none; border-radius:50px; margin-top:15px; font-weight:bold; cursor:pointer;">CLOSE</button>
         </div>
     </div>
 
@@ -310,7 +324,6 @@
                     landline: landlineIdx !== -1 && cols[landlineIdx] ? cols[landlineIdx].trim() : '',
                     whatsapp: whatsappIdx !== -1 && cols[whatsappIdx] ? cols[whatsappIdx].trim() : '',
                     
-                    // 🎯 गड़बड़ ठीक की गई: डिफ़ॉल्ट स्टेटस अब 'Off-Duty' रहेगा, न कि 'Absent'
                     status: statusIdx !== -1 && cols[statusIdx] && cols[statusIdx].trim() !== "" ? cols[statusIdx].trim() : 'Off-Duty',
                     duty_post: postIdx !== -1 && cols[postIdx] ? cols[postIdx].trim() : 'N/A',
                     in_time: inTimeIdx !== -1 && cols[inTimeIdx] ? cols[inTimeIdx].trim() : '',
@@ -558,7 +571,6 @@
         let badgeClass = 'off';
         let badgeText = '⚪ Off Duty';
         
-        // 🎯 सुधरा हुआ बैज सिस्टम
         if (statusClean === 'duty' || statusClean === 'on-duty') {
             badgeClass = 'on';
             badgeText = '🟢 On Duty';
@@ -600,7 +612,6 @@
         document.getElementById('userMobile').value = "";
     }
 
-    // बाकी फंक्शन्स पूर्ववत रहेंगे...
     function toggleNightMode() {
         document.body.classList.toggle('night-mode');
         const isNight = document.body.classList.contains('night-mode');
@@ -611,10 +622,13 @@
         const btn = document.getElementById('modeBtn');
         if (btn) btn.innerHTML = isNight ? "☀️ LIGHT MODE" : "🌙 NIGHT MODE";
     }
+    
+    // 🔒 मोडल्स की विजिबिलिटी मैनेज करने वाला परफेक्ट फंक्शन
     function toggleModal(id) {
         const m = document.getElementById(id);
         if (m) m.style.display = (m.style.display === "block") ? "none" : "block";
     }
+
     function changeZoom(delta) {
         let currentZoom = parseFloat(document.body.style.zoom) || 1.0;
         currentZoom += delta;
