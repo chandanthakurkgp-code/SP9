@@ -40,28 +40,6 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        #loginScreen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #1a1a1a; display: flex; justify-content: center;
-            align-items: center; z-index: 99999; padding: 20px;
-        }
-        .login-box {
-            background: #ffffff; padding: 30px; border-radius: 20px;
-            border: 5px solid var(--light-green); max-width: 400px; width: 100%;
-            text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-        }
-        .login-input {
-            width: 100%; padding: 15px; border-radius: 50px;
-            border: 3px solid var(--light-green); font-size: 18px;
-            text-align: center; margin: 20px 0; outline: none;
-        }
-        .login-submit {
-            width: 100%; padding: 15px; border-radius: 50px;
-            background: var(--police-blue); color: white; font-size: 16px;
-            font-weight: 900; border: none; cursor: pointer;
-            box-shadow: 0 4px 0 var(--green-shadow);
-        }
-
         .main-header { 
             text-align: center; 
             background-color: var(--police-blue); 
@@ -84,7 +62,7 @@
         .links-btn.blue { background-color: var(--btn-blue); box-shadow: 0 4px 0 #9a1f1f; color: white; }
         .links-btn.orange { background-color: var(--btn-orange); box-shadow: 0 4px 0 #cc7a29; color: white; }
 
-        /* अटेंडेंस डैशबोर्ड */
+        /* 🚨 हमेशा दिखने वाला परमानेंट अटेंडेंस डैशबोर्ड */
         .attendance-panel {
             background: var(--dark-bg); padding: 20px 15px; text-align: center;
             border-bottom: 3px solid var(--light-green);
@@ -96,7 +74,8 @@
         .post-input {
             width: 85%; padding: 12px; border-radius: 50px;
             border: 2px solid var(--police-blue); font-size: 15px;
-            text-align: center; margin-bottom: 12px; outline: none;
+            text-align: center; margin-bottom: 12px; outline: none; color: var(--text-color);
+            background: var(--white-bg);
         }
         .duty-master-btn {
             width: 85%; padding: 14px; font-size: 16px; font-weight: 900;
@@ -106,7 +85,6 @@
         .duty-master-btn.join { background-color: #4cd137; box-shadow: 0 4px 0 #389526; }
         .duty-master-btn.leave { background-color: #c23616; box-shadow: 0 4px 0 #8c260f; }
 
-        /* 🔒 मोडल्स (पॉप-अप विंडो) की सही सेटिंग */
         .modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); z-index: 99999; padding: 20px;
@@ -124,7 +102,6 @@
         .search-container { background: var(--dark-bg); padding: 0 15px 15px 15px; border-bottom: 3px solid var(--light-green); }
         .global-search-bar { width: 100%; max-width: 600px; padding: 15px; border-radius: 50px; border: 3px solid var(--light-green); font-size: 18px; display: block; margin: 0 auto; outline: none; }
 
-        /* सुपर-ऑप्टिमाइज़्ड स्क्रॉल बार (GPU Accelerated) */
         .nav-container { 
             background-color: var(--dark-bg); padding: 15px 0; position: sticky; top: 0; z-index: 1000; 
             display: flex; gap: 10px; border-bottom: 4px solid var(--light-green); overflow-x: auto; 
@@ -168,92 +145,77 @@
         .zoom-controls { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 4000; }
         .zoom-btn { width: 50px; height: 50px; border-radius: 50%; background-color: var(--light-green); border: 3px solid var(--green-shadow); font-size: 24px; font-weight: 900; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .home-btn { background-color: var(--btn-blue); border-color: #9a1f1f; color: white; }
-        .logout-btn { background-color: #7f8c8d !important; color: white !important; }
     </style>
 </head>
 <body>
 
-<div id="loginScreen">
-    <div class="login-box">
-        <h2 style="color:var(--police-blue); margin:0;">PASCHIM MEDINIPUR POLICE</h2>
-        <p style="color:#555; font-weight:bold; margin-top:5px;">स्मार्ट ट्रैकिंग एवं अटेंडेंस सिस्टम</p>
-        <input type="tel" id="userMobile" class="login-input" placeholder="अपना 10-अंकीय मोबाइल नंबर दर्ज करें" maxlength="10">
-        <button class="login-submit" onclick="verifyLogin()">प्रवेश करें (LOGIN)</button>
-        <p id="loginError" style="color:red; font-weight:bold; margin-top:10px; display:none;">⚠️ यह नंबर रिकॉर्ड में नहीं है!</p>
+<div class="main-header">
+    <h1 class="main-title">SUPERINTENDENT OF POLICE</h1>
+    <div class="main-subtitle">PASCHIM MEDINIPUR</div>
+</div>
+
+<div class="top-actions">
+    <button class="mode-btn" onclick="toggleNightMode()" id="modeBtn">🌙 NIGHT MODE</button>
+    <button class="links-btn blue" onclick="toggleModal('quickLinksModal')">🌐 QUICK LINKS</button>
+    <button class="links-btn orange" onclick="toggleModal('importantLinksModal')">📌 IMPORTANT SITES</button>
+</div>
+
+<!-- 🚨 हमेशा लाइव रहने वाला इन-बिल्ट अटेंडेंस पैनल -->
+<div class="attendance-panel">
+    <div class="attendance-box">
+        <h3 style="margin-top:0; color:var(--police-blue);">🚨 LIVE ATTENDANCE (हाजिरी दर्ज करें)</h3>
+        
+        <!-- जॉइन ड्यूटी सेक्शन -->
+        <div id="dutyFormArea">
+            <input type="text" id="dutyUserName" class="post-input" placeholder="अपना सही नाम टाइप करें...">
+            <input type="text" id="dutyPostName" class="post-input" placeholder="ड्यूटी पोस्ट/स्थान का नाम लिखें...">
+            <button class="duty-master-btn join" onclick="handleDutyAction('join')">🚨 JOIN DUTY</button>
+        </div>
+        
+        <!-- लीव ड्यूटी सेक्शन -->
+        <div id="leaveFormArea" style="display:none;">
+            <p id="activeDutyStatus" style="font-weight:bold; color:#4cd137;"></p>
+            <button class="duty-master-btn leave" onclick="handleDutyAction('leave')">🛑 LEAVE DUTY (ड्यूटी समाप्त)</button>
+        </div>
+        
+        <p id="gpsStatus" style="font-size:12px; color:#7f8c8d; margin-top:10px; margin-bottom:0; font-weight:bold;"></p>
     </div>
 </div>
 
-<div id="appContent" style="display:none;">
-    <div class="main-header">
-        <h1 class="main-title">SUPERINTENDENT OF POLICE</h1>
-        <div class="main-subtitle">PASCHIM MEDINIPUR</div>
+<div id="quickLinksModal" class="modal">
+    <div class="modal-content">
+        <h2 style="text-align:center; margin-top:0;">🌐 Quick Links</h2><hr>
+        <a href="https://wmdppolicekhoj.co.in/" target="_blank" class="link-item">Khoj (Police Dept)</a>
+        <button onclick="toggleModal('quickLinksModal')" style="width:100%; padding:12px; background:#d32f2f; color:white; border:none; border-radius:50px; margin-top:15px; font-weight:bold;">CLOSE</button>
     </div>
+</div>
 
-    <div class="top-actions">
-        <button class="mode-btn" onclick="toggleNightMode()" id="modeBtn">🌙 NIGHT MODE</button>
-        <button class="links-btn blue" onclick="toggleModal('quickLinksModal')">🌐 QUICK LINKS</button>
-        <button class="links-btn orange" onclick="toggleModal('importantLinksModal')">📌 IMPORTANT SITES</button>
+<div id="importantLinksModal" class="modal">
+    <div class="modal-content">
+        <h2 style="text-align:center; margin-top:0;">📌 Important Sites</h2><hr>
+        <a href="https://westbengalpolice.gov.in/" target="_blank" class="link-item">West Bengal Police</a>
+        <button onclick="toggleModal('importantLinksModal')" style="width:100%; padding:12px; background:#d32f2f; color:white; border:none; border-radius:50px; margin-top:15px; font-weight:bold;">CLOSE</button>
     </div>
+</div>
 
-    <div class="attendance-panel">
-        <div class="attendance-box" id="attendanceBox">
-            <h3 id="panelWelcome" style="margin-top:0; color:var(--police-blue);">जय हिन्द, ऑफिसर</h3>
-            <div id="dutyFormArea">
-                <input type="text" id="dutyPostName" class="post-input" placeholder="ड्यूटी पोस्ट/स्थान का नाम लिखें...">
-                <button class="duty-master-btn join" onclick="handleDutyAction('join')">🚨 JOIN DUTY (حاضरी दर्ज करें)</button>
-            </div>
-            <div id="leaveFormArea" style="display:none;">
-                <p style="font-weight:bold; color:#ff7700;">आप वर्तमान में ऑन-ड्यूटी हैं।</p>
-                <button class="duty-master-btn leave" onclick="handleDutyAction('leave')">🛑 LEAVE DUTY (ड्यूटी समाप्त)</button>
-            </div>
-            <p id="gpsStatus" style="font-size:12px; color:#7f8c8d; margin-bottom:0; font-weight:bold;"></p>
-        </div>
-    </div>
+<div class="search-container">
+    <input type="text" id="globalSearch" class="global-search-bar" placeholder="खोजें...">
+</div>
 
-    <!-- 🎯 फिक्स किया गया क्विक लिंक्स मोडल विंडो -->
-    <div id="quickLinksModal" class="modal">
-        <div class="modal-content">
-            <h2 style="text-align:center; margin-top:0;">🌐 Quick Links</h2><hr>
-            <div style="max-height: 250px; overflow-y: auto;">
-                <a href="https://wmdppolicekhoj.co.in/" target="_blank" class="link-item">Khoj (Police Dept)</a>
-            </div>
-            <button onclick="toggleModal('quickLinksModal')" style="width:100%; padding:12px; background:#d32f2f; color:white; border:none; border-radius:50px; margin-top:15px; font-weight:bold; cursor:pointer;">CLOSE</button>
-        </div>
-    </div>
+<div class="nav-container" id="tabMenu"></div>
+<div class="container" id="contentArea"></div>
 
-    <!-- 🎯 फिक्स किया गया इम्पोर्टेन्ट साइट्स मोडल विंडो -->
-    <div id="importantLinksModal" class="modal">
-        <div class="modal-content">
-            <h2 style="text-align:center; margin-top:0;">📌 Important Sites</h2><hr>
-            <div style="max-height: 250px; overflow-y: auto;">
-                <a href="https://westbengalpolice.gov.in/" target="_blank" class="link-item">West Bengal Police</a>
-            </div>
-            <button onclick="toggleModal('importantLinksModal')" style="width:100%; padding:12px; background:#d32f2f; color:white; border:none; border-radius:50px; margin-top:15px; font-weight:bold; cursor:pointer;">CLOSE</button>
-        </div>
-    </div>
-
-    <div class="search-container">
-        <input type="text" id="globalSearch" class="global-search-bar" placeholder="खोजें...">
-    </div>
-
-    <div class="nav-container" id="tabMenu"></div>
-    <div class="container" id="contentArea"></div>
-
-    <div class="zoom-controls">
-        <button class="zoom-btn home-btn logout-btn" onclick="logout()" title="लॉगआउट">🔓</button>
-        <button class="zoom-btn home-btn" onclick="goHome()">🏠</button>
-        <button class="zoom-btn" onclick="changeZoom(0.1)">+</button>
-        <button class="zoom-btn" onclick="changeZoom(-0.1)">−</button>
-    </div>
+<div class="zoom-controls">
+    <button class="zoom-btn home-btn" onclick="goHome()">🏠</button>
+    <button class="zoom-btn" onclick="changeZoom(0.1)">+</button>
+    <button class="zoom-btn" onclick="changeZoom(-0.1)">−</button>
 </div>
 
 <script>
     const GOOGLE_SHEET_ID = "1dQW0F83Sn9hCOqVRSkIvtReOu31oh9tM0dF6cSNfyl0"; 
 
     let rawDataList = []; 
-    let userAssignedPS = ""; 
-    let isMasterUser = false; 
-    let currentUserMobile = "";
+    let activeDutyUser = null; // वर्तमान में ऑन-ड्यूटी यूजर का नाम ट्रैक करने के लिए
 
     let shopData = {
         "asp": { title: "ASP", partners: [] },
@@ -277,6 +239,15 @@
             updateModeButton(true);
         }
         loadGoogleSheetDirectly();
+        
+        // लोकल स्टोरेज से एक्टिव ऑन-ड्यूटी स्टेट रीस्टोर करना
+        const savedActiveUser = localStorage.getItem('activeDutyUser');
+        if(savedActiveUser) {
+            activeDutyUser = savedActiveUser;
+            document.getElementById('dutyFormArea').style.display = "none";
+            document.getElementById('leaveFormArea').style.display = "block";
+            document.getElementById('activeDutyStatus').innerText = `✅ आप वर्तमान में "${activeDutyUser}" के नाम से ऑन-ड्यूटी हैं।`;
+        }
     };
 
     function loadGoogleSheetDirectly() {
@@ -332,69 +303,22 @@
                     out_gps: outGpsIdx !== -1 && cols[outGpsIdx] ? cols[outGpsIdx].trim() : '',
                     summary: summaryIdx !== -1 && cols[summaryIdx] ? cols[summaryIdx].trim() : 'P:0 | A:0 | Hrs:0'
                 };
+
+                // अगर लोकल स्टोरेज में यह यूजर ऑन-ड्यूटी सेव्ड है तो लिस्ट में भी ऑन-ड्यूटी रखें
+                if (activeDutyUser && obj.name.toLowerCase() === activeDutyUser.toLowerCase()) {
+                    obj.status = "On-Duty";
+                    obj.duty_post = localStorage.getItem('activeDutyPost') || 'N/A';
+                }
+
                 rawDataList.push(obj);
             }
 
-            const savedMobile = localStorage.getItem('userMobileNumber');
-            if (savedMobile) {
-                processLoginWithMobile(savedMobile, true); 
-            }
+            buildDynamicUI();
         })
         .catch(err => console.error("डेटा लोड करने में समस्या आई।", err));
     }
 
-    function verifyLogin() {
-        const mobileInput = document.getElementById('userMobile').value.trim();
-        if (mobileInput.length < 10) {
-            alert("कृपया सही 10-अंकीय मोबाइल नंबर दर्ज करें!");
-            return;
-        }
-        processLoginWithMobile(mobileInput, false);
-    }
-
-    function processLoginWithMobile(mobileNum, isAutoLogin) {
-        let matchedUser = rawDataList.find(u => u.mobile === mobileNum || u.whatsapp === mobileNum);
-
-        if (!matchedUser) {
-            document.getElementById('loginError').style.display = "block";
-            if(isAutoLogin) logout(); 
-            return;
-        }
-
-        document.getElementById('loginError').style.display = "none";
-        currentUserMobile = mobileNum;
-        localStorage.setItem('userMobileNumber', mobileNum); 
-
-        if (["asp", "sdpo", "dysp", "ci"].includes(matchedUser.type.toLowerCase())) {
-            isMasterUser = true;
-            userAssignedPS = "";
-            document.getElementById('attendanceBox').style.display = "none"; 
-        } else {
-            isMasterUser = false;
-            userAssignedPS = matchedUser.ps_name; 
-            document.getElementById('attendanceBox').style.display = "block";
-            setupAttendancePanel(matchedUser);
-        }
-
-        document.getElementById('loginScreen').style.display = "none";
-        document.getElementById('appContent').style.display = "block";
-
-        buildDynamicUI();
-    }
-
-    function setupAttendancePanel(user) {
-        document.getElementById('panelWelcome').innerText = `जय हिन्द, ${user.name} (${user.rank})`;
-        let statusClean = user.status.toLowerCase();
-        
-        if (statusClean === 'on-duty' || statusClean === 'duty') {
-            document.getElementById('dutyFormArea').style.display = "none";
-            document.getElementById('leaveFormArea').style.display = "block";
-        } else {
-            document.getElementById('dutyFormArea').style.display = "block";
-            document.getElementById('leaveFormArea').style.display = "none";
-        }
-    }
-
+    // 🤖 100% ओपन और परमानेंट जीपीएस अटेंडेंस एक्शन
     function handleDutyAction(actionType) {
         const statusField = document.getElementById('gpsStatus');
         statusField.innerText = "🌐 कृपया प्रतीक्षा करें, आपका सटीक GPS लोकेशन कैप्चर किया जा रहा है...";
@@ -410,54 +334,80 @@
             let gpsCoords = `${lat}, ${lon}`;
             let currentDateTime = new Date().toLocaleString('en-US');
 
-            let matchedUser = rawDataList.find(u => u.mobile === currentUserMobile);
-
             if (actionType === 'join') {
+                let nameInput = document.getElementById('dutyUserName').value.trim();
                 let postInput = document.getElementById('dutyPostName').value.trim();
-                if (!postInput) {
-                    alert("कृपया अपनी ड्यूटी पोस्ट/स्थान का नाम लिखें!");
+                
+                if (!nameInput || !postInput) {
+                    alert("कृपया अपना नाम और ड्यूटी स्थान दोनों भरें!");
                     statusField.innerText = "";
                     return;
                 }
-                
+
+                // डायरेक्टरी लिस्ट में नाम सर्च करें (केस-सेंसिटिव फ्री सर्च)
+                let matchedUser = rawDataList.find(u => u.name.toLowerCase().includes(nameInput.toLowerCase()));
+
+                if (!matchedUser) {
+                    alert("⚠️ दर्ज किया गया नाम डेटाबेस रिकॉर्ड में नहीं मिला। कृपया सही नाम टाइप करें!");
+                    statusField.innerText = "";
+                    return;
+                }
+
+                // लाइव चेंज अपडेट
                 matchedUser.status = "On-Duty";
                 matchedUser.duty_post = postInput;
                 matchedUser.in_time = currentDateTime;
                 matchedUser.in_gps = gpsCoords;
 
+                // समरी कैलकुलेशन
                 let parts = matchedUser.summary.split('|').map(p => p.trim());
                 let pCount = parseInt(parts[0].split(':')[1]) + 1;
                 let aCount = parseInt(parts[1].split(':')[1]);
                 let hrsCount = parseInt(parts[2].split(':')[1]);
                 matchedUser.summary = `P:${pCount} | A:${aCount} | Hrs:${hrsCount}`;
 
-                alert(`🚨 ड्यूटी सफलतापूर्वक जॉइन की गई!\n📍 स्थान: ${postInput}\n🧭 GPS: ${gpsCoords}`);
+                // स्टेट सेव करें
+                activeDutyUser = matchedUser.name;
+                localStorage.setItem('activeDutyUser', matchedUser.name);
+                localStorage.setItem('activeDutyPost', postInput);
+
+                document.getElementById('dutyFormArea').style.display = "none";
+                document.getElementById('leaveFormArea').style.display = "block";
+                document.getElementById('activeDutyStatus').innerText = `✅ आप वर्तमान में "${matchedUser.name}" के नाम से ऑन-ड्यूटी हैं।`;
+
+                alert(`🚨 जय हिन्द, ड्यूटी सफलतापूर्वक जॉइन की गई!\n📍 स्थान: ${postInput}`);
             } else if (actionType === 'leave') {
-                let hrsWorked = 8; 
-                if(matchedUser.in_time) {
-                    let diffMs = Math.abs(new Date(currentDateTime) - new Date(matchedUser.in_time));
-                    hrsWorked = Math.round(diffMs / (1000 * 60 * 60));
-                    if(hrsWorked === 0) hrsWorked = 1; 
+                let matchedUser = rawDataList.find(u => u.name.toLowerCase() === activeDutyUser.toLowerCase());
+
+                if (matchedUser) {
+                    let hrsWorked = 8; 
+                    matchedUser.status = "Off-Duty";
+                    matchedUser.out_time = currentDateTime;
+                    matchedUser.out_gps = gpsCoords;
+
+                    let parts = matchedUser.summary.split('|').map(p => p.trim());
+                    let pCount = parseInt(parts[0].split(':')[1]);
+                    let aCount = parseInt(parts[1].split(':')[1]);
+                    let hrsCount = parseInt(parts[2].split(':')[1]) + hrsWorked;
+                    matchedUser.summary = `P:${pCount} | A:${aCount} | Hrs:${hrsCount}`;
                 }
 
-                matchedUser.status = "Off-Duty";
-                matchedUser.out_time = currentDateTime;
-                matchedUser.out_gps = gpsCoords;
+                localStorage.removeItem('activeDutyUser');
+                localStorage.removeItem('activeDutyPost');
+                activeDutyUser = null;
 
-                let parts = matchedUser.summary.split('|').map(p => p.trim());
-                let pCount = parseInt(parts[0].split(':')[1]);
-                let aCount = parseInt(parts[1].split(':')[1]);
-                let hrsCount = parseInt(parts[2].split(':')[1]) + hrsWorked;
-                matchedUser.summary = `P:${pCount} | A:${aCount} | Hrs:${hrsCount}`;
+                document.getElementById('dutyFormArea').style.display = "block";
+                document.getElementById('leaveFormArea').style.display = "none";
+                document.getElementById('dutyUserName').value = "";
+                document.getElementById('dutyPostName').value = "";
 
-                alert(`🛑 ड्यूटी सफलतापूर्वक समाप्त!\n⏱️ आज काम किया: ${hrsWorked} घंटे`);
+                alert(`🛑 ड्यूटी सफलतापूर्वक समाप्त!`);
             }
 
-            statusField.innerText = "✅ लोकल डेटा रिकॉर्ड हो गया है।";
-            setupAttendancePanel(matchedUser);
+            statusField.innerText = "✅ डेटा अपडेट हो गया है।";
             buildDynamicUI(); 
         }, (error) => {
-            alert("GPS लोकेशन नहीं मिल पाई।");
+            alert("GPS लोकेशन नहीं मिल पाई। कृपया मोबाइल का GPS ऑन करें।");
             statusField.innerText = "❌ GPS लोकेशन एरर।";
         }, { enableHighAccuracy: true, timeout: 10000 });
     }
@@ -467,10 +417,6 @@
 
         rawDataList.forEach(obj => {
             if(!obj.type) return;
-
-            if (!isMasterUser && obj.type === "police_stations" && obj.ps_name !== userAssignedPS) {
-                return; 
-            }
 
             if (obj.type === "police_stations") {
                 let forceKey = obj.force_type.toLowerCase().trim();
@@ -503,12 +449,7 @@
         contentArea.innerHTML = "";
 
         createTab("📂 DIRECTORY", "directory", true);
-        
-        Object.keys(shopData).forEach(key => {
-            if (isMasterUser || shopData[key].partners.length > 0) {
-                createTab(shopData[key].title, key, false);
-            }
-        });
+        Object.keys(shopData).forEach(key => createTab(shopData[key].title, key, false));
 
         const dirSection = document.createElement('div');
         dirSection.id = 'directory';
@@ -605,13 +546,6 @@
             </div>`;
     }
 
-    function logout() {
-        localStorage.removeItem('userMobileNumber');
-        document.getElementById('appContent').style.display = "none";
-        document.getElementById('loginScreen').style.display = "flex";
-        document.getElementById('userMobile').value = "";
-    }
-
     function toggleNightMode() {
         document.body.classList.toggle('night-mode');
         const isNight = document.body.classList.contains('night-mode');
@@ -622,19 +556,17 @@
         const btn = document.getElementById('modeBtn');
         if (btn) btn.innerHTML = isNight ? "☀️ LIGHT MODE" : "🌙 NIGHT MODE";
     }
-    
-    // 🔒 मोडल्स की विजिबिलिटी मैनेज करने वाला परफेक्ट फंक्शन
     function toggleModal(id) {
         const m = document.getElementById(id);
         if (m) m.style.display = (m.style.display === "block") ? "none" : "block";
     }
-
     function changeZoom(delta) {
         let currentZoom = parseFloat(document.body.style.zoom) || 1.0;
         currentZoom += delta;
         document.body.style.zoom = Math.min(Math.max(currentZoom, 0.8), 1.5);
     }
     function goHome() { location.reload(); }
+    
     function togglePS(header) {
         const content = header.nextElementSibling;
         const icon = header.querySelector('.ps-icon');
@@ -646,6 +578,7 @@
             icon.innerText = '▲';
         }
     }
+    
     function showSection(id, btn) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -654,6 +587,7 @@
         btn.classList.add('active');
         btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
+    
     function globalFilter() {
         const term = document.getElementById('globalSearch').value.toLowerCase();
         const activeSection = document.querySelector('.section.active');
