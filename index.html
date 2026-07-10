@@ -38,7 +38,6 @@
             overflow-x: hidden; 
         }
 
-        /* लॉग-इन स्क्रीन स्टाइल */
         #loginScreen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #1a1a1a; display: flex; justify-content: center;
@@ -108,7 +107,30 @@
         .search-container { background: var(--dark-bg); padding: 0 15px 15px 15px; border-bottom: 3px solid var(--light-green); }
         .global-search-bar { width: 100%; max-width: 600px; padding: 15px; border-radius: 50px; border: 3px solid var(--light-green); font-size: 18px; display: block; margin: 0 auto; outline: none; }
 
-        .nav-container { background-color: var(--dark-bg); padding: 15px 0; position: sticky; top: 0; z-index: 1000; display: flex; gap: 10px; border-bottom: 4px solid var(--light-green); overflow-x: auto; padding-left: 10px; scrollbar-width: none; }
+        /* 🚀 बटन्स के बाएँ-दाएँ स्क्रॉल को सुपर-फास्ट और मक्खन जैसा स्मूथ बनाने का अपडेट */
+        .nav-container { 
+            background-color: var(--dark-bg); 
+            padding: 15px 0; 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000; 
+            display: flex; 
+            gap: 10px; 
+            border-bottom: 4px solid var(--light-green); 
+            overflow-x: auto; 
+            padding-left: 10px; 
+            scrollbar-width: none; /* फ़ायरफ़ॉक्स के लिए स्क्रॉलबार छिपाएँ */
+            
+            /* नीचे दी गई लाइनें मोबाइल पर टच रिस्पॉन्स को 10x तेज कर देती हैं */
+            -webkit-overflow-scrolling: touch; 
+            scroll-behavior: smooth; 
+            overscroll-behavior-x: contain;
+        }
+        /* क्रोम और सफारी के लिए स्क्रॉलबार छुपाना */
+        .nav-container::-webkit-scrollbar {
+            display: none;
+        }
+        
         .tab-btn { font-size: 14px; padding: 10px 20px; font-weight: 900; cursor: pointer; border-radius: 50px; background-color: var(--light-green); color: #fff; border: none; white-space: nowrap; box-shadow: 0 4px 0 var(--green-shadow); }
         .tab-btn.active { background-color: #ffffff !important; color: #000000 !important; transform: translateY(3px); box-shadow: 0 2px 0 var(--green-shadow); }
 
@@ -144,7 +166,6 @@
 </head>
 <body>
 
-<!-- 🔑 स्मार्ट लॉग-इन स्क्रीन -->
 <div id="loginScreen">
     <div class="login-box">
         <h2 style="color:var(--police-blue); margin:0;">PASCHIM MEDINIPUR POLICE</h2>
@@ -155,7 +176,6 @@
     </div>
 </div>
 
-<!-- मुख्य ऍप कंटेंट (लॉगिन के बाद दिखेगा) -->
 <div id="appContent" style="display:none;">
     <div class="main-header">
         <h1 class="main-title">SUPERINTENDENT OF POLICE</h1>
@@ -391,7 +411,6 @@
                     grouped[psName].push(p);
                 });
                 Object.keys(grouped).forEach(psName => {
-                    // 🎯 यहाँ सुधार किया गया है: 'open' क्लास हटा दी गई है ताकि थानों की लिस्ट पहले से खुली न रहे!
                     html += `
                         <div class="ps-header" onclick="togglePS(this)">
                             <span>🚨 ${psName} Police Station</span>
@@ -496,6 +515,9 @@
         const target = document.getElementById(id);
         if (target) target.classList.add('active');
         btn.classList.add('active');
+        
+        // 🎯 अतिरिक्त स्मार्ट फ़ीचर: बटन दबाते ही वह बटन खुद सेंटर में स्क्रॉल हो जाएगा
+        btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
 
     function globalFilter() {
@@ -506,7 +528,6 @@
             cards.forEach(card => {
                 const isMatch = card.innerText.toLowerCase().includes(term);
                 card.style.display = isMatch ? "block" : "none";
-                // यदि सर्च में कोई मैच मिलता है तो उसका पुलिस स्टेशन ऑटो-ओपन हो जाए
                 if (term.length > 0 && isMatch) {
                     const parent = card.closest('.ps-content');
                     if (parent) {
