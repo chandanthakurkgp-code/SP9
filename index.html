@@ -140,7 +140,6 @@
         .status-badge.off { background-color: var(--status-off); }
         .status-badge.absent { background-color: var(--status-absent); }
 
-        /* 🎯 पुलिस स्टेशन बटन का बैकग्राउंड अब हरा कर दिया गया है */
         .ps-header {
             background-color: var(--light-green); color: #ffffff; padding: 15px;
             margin-bottom: 10px; border-radius: 15px; cursor: pointer; font-weight: 900;
@@ -270,6 +269,14 @@
         return `${dateString} | ${timeString}`;
     }
 
+    // 🎯 कुल सेकंड्स को Hrs: 00h:00m:00s में पार्स करने का नया स्मार्ट इंजन
+    function parseSecondsToHMS(totalSeconds) {
+        let hrs = Math.floor(totalSeconds / 3600);
+        let mins = Math.floor((totalSeconds % 3600) / 60);
+        let secs = totalSeconds % 60;
+        return `${hrs}h:${mins}m:${secs}s`;
+    }
+
     function loadGoogleSheetDirectly() {
         const url = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=csv&gid=0&v=` + Date.now();
 
@@ -313,7 +320,9 @@
                 let savedOutTime = localStorage.getItem(`outTime_${pName}`) || (outTimeIdx !== -1 && cols[outTimeIdx] ? cols[outTimeIdx].trim() : '');
                 let savedInGps = localStorage.getItem(`inGps_${pName}`) || (inGpsIdx !== -1 && cols[inGpsIdx] ? cols[inGpsIdx].trim() : '');
                 let savedOutGps = localStorage.getItem(`outGps_${pName}`) || (outGpsIdx !== -1 && cols[outGpsIdx] ? cols[outGpsIdx].trim() : '');
-                let savedSummary = localStorage.getItem(`summary_${pName}`) || (summaryIdx !== -1 && cols[summaryIdx] ? cols[summaryIdx].trim() : 'P:0 | A:0 | Hrs:0');
+                
+                // डिफॉल्ट समरी में सेकंड्स '0s' को आधार बनाया गया है ताकि एरर न हो
+                let savedSummary = localStorage.getItem(`summary_${pName}`) || (summaryIdx !== -1 && cols[summaryIdx] ? cols[summaryIdx].trim() : 'P:0 | A:0 | Hrs:0s');
 
                 let obj = {
                     type: typeIdx !== -1 && cols[typeIdx] ? cols[typeIdx].trim().toLowerCase() : '',
@@ -400,8 +409,15 @@
             let parts = matchedUser.summary.split('|').map(p => p.trim());
             let pCount = parseInt(parts[0].split(':')[1]) + 1;
             let aCount = parseInt(parts[1].split(':')[1]);
-            let hrsCount = parseInt(parts[2].split(':')[1]);
-            matchedUser.summary = `P:${pCount} | A:${aCount} | Hrs:${hrsCount}`;
+            
+            // पुरानी समरी से सेकंड्स को सही ढंग से बचाकर रखना
+            let rawHrsString = parts[2].split(':')[1].trim();
+            let oldSeconds = parseInt(rawHrsString) || 0;
+
+            matchedUser.summary = `P:${pCount} | A:${aCount} | Hrs:${oldSeconds}s`;
+
+            // लोकल स्टोरेज टाइमस्टैम्प सेव करना गणना को सटीक रखने के लिए
+            localStorage.setItem(`timestamp_join_${uName}`, Date.now().toString());
 
             localStorage.setItem(`status_${uName}`, "On-Duty");
             localStorage.setItem(`post_${uName}`, postInput);
@@ -422,14 +438,13 @@
             let matchedUser = rawDataList.find(u => u.name.toLowerCase() === activeDutyUser.toLowerCase());
 
             if (matchedUser) {
-                let hrsWorked = 8; 
-                if(matchedUser.in_time) {
-                    try {
-                        let timePartIn = matchedUser.in_time.split("|")[1].trim();
-                        let timePartOut = currentDateTime.split("|")[1].trim();
-                        let diffMs = Math.abs(new Date("2026/01/01 " + timePartOut) - new Date("2026/01/01 " + timePartIn));
-                        hrsWorked = Math.round(diffMs / (1000 * 60 * 60)) || 1;
-                    } catch(e) { hrsWorked = 8; }
+                let uName = matchedUser.name;
+                let elapsedSeconds = 28800; // फॉलबैक सुरक्षा के लिए 8 घंटे (28800 सेकंड्स) डिफॉल्ट
+
+                let joinTimestampStr = localStorage.getItem(`timestamp_join_${uName}`);
+                if (joinTimestampStr) {
+                    let diffMs = Date.now() - parseInt(joinTimestampStr);
+                    elapsedSeconds = Math.floor(diffMs / 1000); // ⏱️ सटीक सेकंड्स गणना हुई
                 }
                 
                 matchedUser.status = "Off-Duty";
@@ -439,14 +454,18 @@
                 let parts = matchedUser.summary.split('|').map(p => p.trim());
                 let pCount = parseInt(parts[0].split(':')[1]);
                 let aCount = parseInt(parts[1].split(':')[1]);
-                let hrsCount = parseInt(parts[2].split(':')[1]) + hrsWorked;
-                matchedUser.summary = `P:${pCount} | A:${aCount} | Hrs:${hrsCount}`;
+                
+                let rawHrsString = parts[2].split(':')[1].trim();
+                let oldSeconds = parseInt(rawHrsString) || 0;
+                let newTotalSeconds = oldSeconds + elapsedSeconds; // 🎯 सेकंड्स आपस में प्लस हुए
 
-                let uName = matchedUser.name;
+                matchedUser.summary = `P:${pCount} | A:${aCount} | Hrs:${newTotalSeconds}s`;
+
                 localStorage.setItem(`status_${uName}`, "Off-Duty");
                 localStorage.setItem(`outTime_${uName}`, currentDateTime);
                 localStorage.setItem(`outGps_${uName}`, gpsOutput);
                 localStorage.setItem(`summary_${uName}`, matchedUser.summary);
+                localStorage.removeItem(`timestamp_join_${uName}`);
             }
 
             localStorage.removeItem('activeDutyUser');
@@ -457,7 +476,7 @@
             document.getElementById('dutyUserName').value = "";
             document.getElementById('dutyPostName').value = "";
 
-            alert(`🛑 ड्यूटी सफलतापूर्वक समाप्त!\n⏱️ कुल काम: ${hrsWorked} घंटे दर्ज हुए।`);
+            alert(`🛑 ड्यूटी सफलतापूर्वक समाप्त!`);
         }
 
         statusField.innerText = "✅ डेटा परमानेंट मेमोरी में सुरक्षित सहेज लिया गया है।";
@@ -474,6 +493,11 @@
         csvContent += "Name,Rank,Police Station,Force Type,Current Status,Duty Post,Join Time (IST),Leave Time (IST),Join GPS,Leave GPS,Attendance Summary (P|A|Hrs)\n";
         
         rawDataList.forEach(p => {
+            let summaryParts = p.summary.split('|').map(x => x.trim());
+            let totalSeconds = parseInt(summaryParts[2].split(':')[1]) || 0;
+            let formattedReportTime = parseSecondsToHMS(totalSeconds); // CSV रिपोर्ट में भी H:M:S दिखेगा
+            let readableSummary = `${summaryParts[0]} | ${summaryParts[1]} | Hrs:${formattedReportTime}`;
+
             let row = [
                 `"${p.name}"`,
                 `"${p.rank}"`,
@@ -485,7 +509,7 @@
                 `"${p.out_time}"`,
                 `"${p.in_gps}"`,
                 `"${p.out_gps}"`,
-                `"${p.summary}"`
+                `"${readableSummary}"`
             ].join(",");
             csvContent += row + "\n";
         });
@@ -618,6 +642,11 @@
             `;
         }
 
+        // 🎯 डिस्प्ले के समय कुल सेकंड्स को तोड़कर (Hrs: 0h:0m:0s) दिखाना
+        let summaryParts = p.summary.split('|').map(x => x.trim());
+        let totalSeconds = parseInt(summaryParts[2].split(':')[1]) || 0;
+        let formattedTimeLive = parseSecondsToHMS(totalSeconds);
+
         return `
             <div class="list-card">
                 <span class="status-badge ${badgeClass}">${badgeText}</span>
@@ -626,7 +655,7 @@
                 <p>📞 <b>Mobile:</b> ${p.mobile || 'N/A'}</p>
                 ${trackingDetails}
                 <p style="background:#f1f2f6; padding:5px 10px; border-radius:10px; font-size:12px; font-weight:bold; color:#2f3542;">
-                    📊 <b>Attendance Record:</b> ${p.summary}
+                    📊 <b>Attendance Record:</b> ${summaryParts[0]} | ${summaryParts[1]} | <b>Hrs: ${formattedTimeLive}</b>
                 </p>
                 <div class="btn-group">
                     <a href="tel:${p.mobile}" class="action-btn">📞 CALL</a>
