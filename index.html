@@ -60,7 +60,6 @@
         }
         .main-title { font-size: clamp(24px, 6vw, 40px); font-weight: 900; margin: 0; text-transform: uppercase; }
 
-        /* 🎯 बटन्स को लेफ्ट-राइट स्क्रॉल (भसकाने) के लिए अपडेटेड स्टाइल */
         .top-actions {
             background: var(--dark-bg); padding: 15px 10px;
             display: flex; justify-content: flex-start; gap: 8px; flex-wrap: nowrap; 
@@ -75,9 +74,8 @@
         .mode-btn { background-color: var(--light-green); color: #fff; box-shadow: 0 4px 0 var(--green-shadow); }
         .links-btn.blue { background-color: var(--btn-blue); box-shadow: 0 4px 0 #9a1f1f; color: white; }
         .links-btn.orange { background-color: var(--btn-orange); box-shadow: 0 4px 0 #cc7a29; color: white; }
-        
-        /* 🚨 इमरजेंसी अलर्ट बटन का विशिष्ट लाल रंग स्टाइल */
         .links-btn.emergency { background-color: #c23616; box-shadow: 0 4px 0 #8c260f; color: white; animation: pulseAlert 1.5s infinite; }
+        
         @keyframes pulseAlert {
             0% { opacity: 1; }
             50% { opacity: 0.85; }
@@ -100,26 +98,11 @@
         }
 
         @keyframes policeBorderGlow {
-            0% {
-                border-image: linear-gradient(0deg, #FF6600, #ff0000, #002699, #FF6600) 1;
-                box-shadow: 0 0 15px rgba(255, 102, 0, 0.6), 0 0 5px rgba(0, 38, 153, 0.4);
-            }
-            25% {
-                border-image: linear-gradient(90deg, #002699, #FF6600, #ff0000, #002699) 1;
-                box-shadow: 0 0 20px rgba(255, 0, 0, 0.8), 0 0 8px rgba(255, 102, 0, 0.5);
-            }
-            50% {
-                border-image: linear-gradient(180deg, #ff0000, #002699, #FF6600, #ff0000) 1;
-                box-shadow: 0 0 15px rgba(0, 38, 153, 0.7), 0 0 5px rgba(255, 0, 0, 0.5);
-            }
-            75% {
-                border-image: linear-gradient(270deg, #FF6600, #ff0000, #002699, #FF6600) 1;
-                box-shadow: 0 0 20px rgba(255, 102, 0, 0.8), 0 0 8px rgba(0, 38, 153, 0.6);
-            }
-            100% {
-                border-image: linear-gradient(360deg, #FF6600, #ff0000, #002699, #FF6600) 1;
-                box-shadow: 0 0 15px rgba(255, 102, 0, 0.6), 0 0 5px rgba(0, 38, 153, 0.4);
-            }
+            0% { border-image: linear-gradient(0deg, #FF6600, #ff0000, #002699, #FF6600) 1; }
+            25% { border-image: linear-gradient(90deg, #002699, #FF6600, #ff0000, #002699) 1; }
+            50% { border-image: linear-gradient(180deg, #ff0000, #002699, #FF6600, #ff0000) 1; }
+            75% { border-image: linear-gradient(270deg, #FF6600, #ff0000, #002699, #FF6600) 1; }
+            100% { border-image: linear-gradient(360deg, #FF6600, #ff0000, #002699, #FF6600) 1; }
         }
 
         .post-input {
@@ -168,8 +151,17 @@
             border-radius: 10px; box-shadow: 0 3px 0 var(--green-shadow);
         }
 
-        /* 🚨 इमरजेंसी अलर्ट इनपुट्स का स्टाइल */
         .alert-input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 2px solid #c23616; outline: none; font-size: 14px; }
+
+        /* 🎯 लाइव इनकमिंग अलर्ट पॉप-अप बॉक्स का डिज़ाइन */
+        .live-popup-alert {
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #ffffff; color: #000000; padding: 25px; border-radius: 20px;
+            border: 6px solid #c23616; box-shadow: 0 0 30px rgba(255, 0, 0, 0.8);
+            z-index: 100000; max-width: 90%; width: 450px; text-align: center;
+            animation: popShow 0.3s ease-out;
+        }
+        @keyframes popShow { from { transform: translate(-50%, -50%) scale(0.7); opacity: 0; } to { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
 
         .search-container { background: var(--dark-bg); padding: 0 15px 15px 15px; border-bottom: 3px solid var(--light-green); }
         .global-search-bar { width: 100%; max-width: 600px; padding: 15px; border-radius: 50px; border: 3px solid var(--light-green); font-size: 18px; display: block; margin: 0 auto; outline: none; background: #ffffff; }
@@ -186,7 +178,6 @@
             font-size: 14px; padding: 10px 20px; font-weight: 900; cursor: pointer; 
             border-radius: 50px; background-color: var(--light-green); color: #fff; 
             border: none; white-space: nowrap; box-shadow: 0 4px 0 var(--green-shadow);
-            transition: none !important; will-change: transform;
         }
         .tab-btn.active { background-color: #ffffff !important; color: #000000 !important; transform: translateY(3px); box-shadow: 0 2px 0 var(--green-shadow); }
 
@@ -230,11 +221,9 @@
     <button class="mode-btn" onclick="toggleNightMode()" id="modeBtn">🌙 NIGHT MODE</button>
     <button class="links-btn blue" onclick="toggleModal('quickLinksModal')">🌐 QUICK LINKS</button>
     <button class="links-btn orange" onclick="toggleModal('importantLinksModal')">📌 IMPORTANT SITES</button>
-    <!-- 🎯 इमरजेंसी अलर्ट बटन ठीक दाहिने तरफ जोड़ा गया -->
     <button class="links-btn emergency" onclick="toggleModal('emergencyAlertModal')">🚨 EMERGENCY ALERT</button>
 </div>
 
-<!-- लाइव अटेंडेंस पैनल -->
 <div class="attendance-panel">
     <div class="attendance-box">
         <h3 style="margin-top:0; color:var(--police-blue);">🚨 LIVE ATTENDANCE (हाजिरी दर्ज करें)</h3>
@@ -260,6 +249,16 @@
     </div>
 </div>
 
+<!-- लाइव स्क्रीन पॉप-अप बॉक्स कंटेनर -->
+<div id="liveIncomingAlert" class="live-popup-alert">
+    <h2 style="color: #c23616; margin-top: 0;">🚨 HIGH EMERGENCY ALERT 🚨</h2>
+    <hr style="border: 2px solid #c23616;">
+    <h4 id="alertSenderDetails" style="margin: 10px 0; color: #002699;">From: Unknown Officer</h4>
+    <p id="alertBodyText" style="font-size: 16px; font-weight: bold; margin: 15px 0; line-height: 1.5;"></p>
+    <div id="alertMediaContainer" style="margin: 15px 0;"></div>
+    <button onclick="stopEmergencyEffects()" style="width: 100%; padding: 12px; background: #2ecc71; color: white; border: none; border-radius: 50px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 0 #27ae60;">🛑 ACKNOWLEDGE & STOP SIREN</button>
+</div>
+
 <div id="quickLinksModal" class="modal">
     <div class="modal-content">
         <h2 style="text-align:center; margin-top:0;">🌐 Quick Links</h2><hr>
@@ -276,7 +275,6 @@
     </div>
 </div>
 
-<!-- 🚨 नया इमरजेंसी अलर्ट मॉडल (ASP से IC & OC रैंक प्रमाणीकरण के साथ) -->
 <div id="emergencyAlertModal" class="modal">
     <div class="modal-content" style="border-color: #c23616;">
         <h2 style="text-align:center; margin-top:0; color:#c23616;">🚨 EMERGENCY BROADCAST</h2>
@@ -296,8 +294,7 @@
         <textarea id="alertTextMessage" class="alert-input" rows="3" placeholder="भेजने के लिए संदेश (Text) टाइप करें..."></textarea>
         
         <div style="margin: 10px 0; text-align: center;">
-            <label style="font-weight: bold; font-size: 13px;">🔗 वॉइस/वीडियो लिंक (ऑप्शनल):</label>
-            <input type="url" id="alertMediaUrl" class="alert-input" placeholder="https:// example.com/voice-or-video">
+            <input type="url" id="alertMediaUrl" class="alert-input" placeholder="वॉइस/वीडियो लिंक (Optional) https://...">
         </div>
         
         <button onclick="sendImmediateBroadcast()" style="width:100%; padding:14px; background:#c23616; color:white; border:none; border-radius:50px; font-weight:bold; font-size:15px; cursor:pointer; box-shadow: 0 4px 0 #8c260f;">📢 SEND IMMEDIATELY TO ALL OFFICERS</button>
@@ -323,6 +320,8 @@
 
     let rawDataList = []; 
     let activeDutyUser = null; 
+    let globalSirenAudio = null;
+    let vibrationInterval = null;
 
     let shopData = {
         "asp": { title: "ASP", partners: [] },
@@ -358,7 +357,7 @@
         startLiveWidgetClock();
     };
 
-    // 🎯 नया ब्रॉडकास्ट इंजन (ASP से IC/OC लेवल की तुरंत जांच और अलर्ट के लिए)
+    // 🎯 फिक्स: ब्रॉडकास्ट फायर होने पर स्क्रीन पॉप-अप, वाइब्रेशन और रिंगटोन का मजबूत सिस्टम
     function sendImmediateBroadcast() {
         let authName = document.getElementById('authOfficerName').value.trim();
         let authRank = document.getElementById('authOfficerRank').value;
@@ -370,30 +369,68 @@
             return;
         }
 
-        // सुरक्षा जाँच: केवल ASP, SDPO, DySP, CI, IC & OC रैंक को अनुमति
         if(authRank === "other") {
             alert("❌ सुरक्षा प्रोटोकॉल उल्लंघन: यह अलर्ट भेजने के लिए केवल ASP से IC & OC तक की रैंक ही अधिकृत हैं!");
             return;
         }
 
-        // ब्रॉडकास्ट विंडो सिमुलेशन और व्हाट्सएप्प एकीकरण
-        let finalMessage = `🚨 EMERGENCY ALERT 🚨\nFrom: ${authName} (${authRank.toUpperCase()})\nMessage: ${msgText}`;
+        // 1. लाइव पॉप-अप विंडो में डेटा लोड करें
+        document.getElementById('alertSenderDetails').innerText = `From: ${authName} (${authRank.toUpperCase()})`;
+        document.getElementById('alertBodyText').innerText = msgText;
+        
+        let mediaBox = document.getElementById('alertMediaContainer');
+        mediaBox.innerHTML = "";
         if(mediaUrl) {
-            finalMessage += `\n🔗 Media Link: ${mediaUrl}`;
+            mediaBox.innerHTML = `<a href="${mediaUrl}" target="_blank" style="color: #c23616; font-weight: bold; text-decoration: underline;">🔗 ओपन वॉइस / वीडियो संदेश लिंक</a>`;
         }
 
-        alert(`📢 ब्रॉडकास्ट रेडी!\n\nसफलतापूर्वक सभी ऑन-ड्यूटी फोर्स को वायरलेस हब द्वारा तत्काल प्रेषित किया जा रहा है।`);
+        // 2. पॉप-अप विंडो को स्क्रीन पर दिखाएं
+        document.getElementById('liveIncomingAlert').style.display = "block";
+
+        // 3. फोन वाइब्रेशन ट्रिगर करें (लगातार पल्स मोड)
+        if(navigator.vibrate) {
+            navigator.vibrate([500, 300, 500, 300, 500]);
+            vibrationInterval = setInterval(() => {
+                navigator.vibrate([500, 300, 500]);
+            }, 2000);
+        }
+
+        // 4. सायरन रिंगटोन बजाएं (लाउड पुलिस बीप सायरन ऑडियो)
+        if(!globalSirenAudio) {
+            globalSirenAudio = new Audio('https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg');
+            globalSirenAudio.loop = true;
+        }
+        globalSirenAudio.play().catch(e => console.log("ऑडियो आटोप्ले ब्राउज़र सुरक्षा द्वारा रोका गया"));
+
+        // व्हाट्सएप्प ब्रॉडकास्ट ग्रुप लिंक फॉरवर्ड
+        let finalMessage = `🚨 EMERGENCY ALERT 🚨\nFrom: ${authName} (${authRank.toUpperCase()})\nMessage: ${msgText}`;
+        if(mediaUrl) finalMessage += `\n🔗 Media Link: ${mediaUrl}`;
         
-        // विभागीय ग्रुप में भेजने हेतु क्विक रीडायरेक्ट लिंक जेनरेशन
         let whatsappGroupUrl = `https://wa.me/?text=${encodeURIComponent(finalMessage)}`;
         window.open(whatsappGroupUrl, '_blank');
 
-        // इनपुट साफ करना और मॉडल बंद करना
+        // इनपुट रिसेट और मोड बंद
         document.getElementById('authOfficerName').value = "";
         document.getElementById('authOfficerRank').value = "";
         document.getElementById('alertTextMessage').value = "";
         document.getElementById('alertMediaUrl').value = "";
         toggleModal('emergencyAlertModal');
+    }
+
+    // 🛑 सायरन, वाइब्रेशन और पॉप-अप बंद करने का सिस्टम
+    function stopEmergencyEffects() {
+        document.getElementById('liveIncomingAlert').style.display = "none";
+        if(globalSirenAudio) {
+            globalSirenAudio.pause();
+            globalSirenAudio.currentTime = 0;
+        }
+        if(vibrationInterval) {
+            clearInterval(vibrationInterval);
+        }
+        if(navigator.vibrate) {
+            navigator.vibrate(0);
+        }
+        alert("✅ अलर्ट सफलतापूर्वक एक्नॉलेज (प्राप्त) कर लिया गया है।");
     }
 
     function startLiveWidgetClock() {
@@ -691,16 +728,38 @@
         document.body.removeChild(link);
     }
 
+    function downloadMonthlyCSVReport() {
+        if(rawDataList.length === 0) {
+            alert("डाउनलोड करने के लिए कोई डेटा उपलब्ध नहीं है!");
+            return;
+        }
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Name,Rank,Police Station,Force Type,Current Status,Duty Post,Join Time (IST),Leave Time (IST),Join GPS,Leave GPS,Attendance Summary (P|A|Hrs)\n";
+        rawDataList.forEach(p => {
+            let summaryParts = p.summary.split('|').map(x => x.trim());
+            let totalSeconds = parseInt(summaryParts[2].split(':')[1]) || 0;
+            let formattedReportTime = parseSecondsToHMS(totalSeconds); 
+            let readableSummary = `${summaryParts[0]} | ${summaryParts[1]} | Hrs:${formattedReportTime}`;
+            let row = [`"${p.name}"`,`"${p.rank}"`,`"${p.ps_name}"`,`"${p.force_type}"`,`"${p.status}"`,`"${p.duty_post}"`,`"${p.in_time}"`,`"${p.out_time}"`,`"${p.in_gps}"`,`"${p.out_gps}"`,`"${readableSummary}"`].join(",");
+            csvContent += row + "\n";
+        });
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        let fileDate = new Date().toLocaleDateString('en-GB').replace(/\//g, "-");
+        link.setAttribute("download", `Police_Monthly_Report_${fileDate}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
     function buildDynamicUI() {
         Object.keys(shopData).forEach(key => shopData[key].partners = []);
-
         rawDataList.forEach(obj => {
             if(!obj.type) return;
-
             if (obj.type === "police_stations") {
                 let forceKey = obj.force_type.toLowerCase().trim();
                 if (forceKey === "si & asi") forceKey = "si_asi";
-                
                 if (forceKey === "officer") {
                     shopData["police_stations"].partners.push(obj);
                 } else if (shopData[forceKey]) {
@@ -710,7 +769,6 @@
                 shopData[obj.type].partners.push(obj);
             }
         });
-
         init();
     }
 
@@ -720,30 +778,22 @@
                 shopData[key].partners.sort((a, b) => a.ps_name.localeCompare(b.ps_name));
             }
         });
-        
         const tabMenu = document.getElementById('tabMenu');
         const contentArea = document.getElementById('contentArea');
-        
         tabMenu.innerHTML = "";
         contentArea.innerHTML = "";
-
         createTab("📂 DIRECTORY", "directory", true);
         Object.keys(shopData).forEach(key => createTab(shopData[key].title, key, false));
-
         const dirSection = document.createElement('div');
         dirSection.id = 'directory';
         dirSection.className = "section active";
-        
         let allHtml = "";
-
         Object.keys(shopData).forEach(key => {
             if (shopData[key].partners.length === 0) return;
-
             const section = document.createElement('div');
             section.id = key;
             section.className = "section";
             let html = "";
-            
             if (stationGroupKeys.includes(key)) {
                 const grouped = {};
                 shopData[key].partners.forEach(p => {
@@ -752,27 +802,17 @@
                     grouped[psName].push(p);
                 });
                 Object.keys(grouped).forEach(psName => {
-                    html += `
-                        <div class="ps-header" onclick="togglePS(this)">
-                            <span>🚨 ${psName} Police Station</span>
-                            <span class="ps-icon">▼</span>
-                        </div>
-                        <div class="ps-content">
-                            ${grouped[psName].map(p => createCard(p)).join('')}
-                        </div>`;
+                    html += `<div class="ps-header" onclick="togglePS(this)"><span>🚨 ${psName} Police Station</span><span class="ps-icon">▼</span></div><div class="ps-content">${grouped[psName].map(p => createCard(p)).join('')}</div>`;
                 });
             } else {
                 html = shopData[key].partners.map(p => createCard(p)).join('');
             }
-            
             section.innerHTML = html;
             allHtml += html;
             contentArea.appendChild(section);
         });
-        
         dirSection.innerHTML = allHtml;
         contentArea.prepend(dirSection);
-
         document.getElementById('globalSearch').onkeyup = globalFilter;
     }
 
@@ -787,10 +827,8 @@
     function createCard(p) {
         let forceType = (p.force_type || 'Officer').trim();
         let statusClean = p.status.toLowerCase();
-        
         let badgeClass = 'off';
         let badgeText = '⚪ Off Duty';
-        
         if (statusClean === 'duty' || statusClean === 'on-duty') {
             badgeClass = 'on';
             badgeText = '🟢 On Duty';
@@ -798,24 +836,16 @@
             badgeClass = 'absent';
             badgeText = '🔴 Absent';
         }
-        
         let trackingDetails = "";
         if (statusClean === 'duty' || statusClean === 'on-duty') {
-            trackingDetails = `
-                <p style="color:#ff6600; font-weight:bold;">📍 <b>Duty Post:</b> ${p.duty_post}</p>
-                <p style="font-size:12px;">🧭 <b>In GPS:</b> ${p.in_gps}</p>
-                <p style="font-size:12px; color:#2c3e50;">🕒 <b>Joined At:</b> ${p.in_time}</p>
-            `;
+            trackingDetails = `<p style="color:#ff6600; font-weight:bold;">📍 <b>Duty Post:</b> ${p.duty_post}</p><p style="font-size:12px;">🧭 <b>In GPS:</b> ${p.in_gps}</p><p style="font-size:12px; color:#2c3e50;">🕒 <b>Joined At:</b> ${p.in_time}</p>`;
         }
-
         let summaryParts = p.summary.split('|').map(x => x.trim());
         let totalSeconds = parseInt(summaryParts[2].split(':')[1]) || 0;
         let formattedTimeLive = parseSecondsToHMS(totalSeconds);
-
         let currentDayOnly = getIndianISTDateTime().split("|")[0].trim();
         let lastJoinDate = localStorage.getItem(`lastJoinDate_${p.name}`) || '';
         let displaySummary = p.summary;
-        
         if (statusClean === 'absent' && lastJoinDate !== currentDayOnly) {
             let pCount = parseInt(summaryParts[0].split(':')[1]);
             let aCount = parseInt(summaryParts[1].split(':')[1]) + 1; 
@@ -823,23 +853,7 @@
         } else {
             displaySummary = `${summaryParts[0]} | ${summaryParts[1]} | Hrs:${formattedTimeLive}`;
         }
-
-        return `
-            <div class="list-card">
-                <span class="status-badge ${badgeClass}">${badgeText}</span>
-                <h3 style="color:var(--police-blue); margin-top:0; font-weight:900; font-size: 20px; padding-right: 90px;">${p.name || 'N/A'}</h3>
-                <p>🎖️ <b>Rank:</b> ${p.rank || 'N/A'} (${forceType})</p>
-                <p>📞 <b>Mobile:</b> ${p.mobile || 'N/A'}</p>
-                ${trackingDetails}
-                <p style="background:#f1f2f6; padding:5px 10px; border-radius:10px; font-size:12px; font-weight:bold; color:#2f3542;">
-                    📊 <b>Attendance Record:</b> ${displaySummary}
-                </p>
-                <div class="btn-group">
-                    <a href="tel:${p.mobile}" class="action-btn">📞 CALL</a>
-                    ${p.landline ? `<a href="tel:${p.landline}" class="action-btn">☎️ LANDLINE</a>` : ""}
-                    <a href="https://wa.me/${p.whatsapp}" class="action-btn">💬 WHATSAPP</a>
-                </div>
-            </div>`;
+        return `<div class="list-card"><span class="status-badge ${badgeClass}">${badgeText}</span><h3 style="color:var(--police-blue); margin-top:0; font-weight:900; font-size: 20px; padding-right: 90px;">${p.name || 'N/A'}</h3><p>🎖️ <b>Rank:</b> ${p.rank || 'N/A'} (${forceType})</p><p>📞 <b>Mobile:</b> ${p.mobile || 'N/A'}</p>${trackingDetails}<p style="background:#f1f2f6; padding:5px 10px; border-radius:10px; font-size:12px; font-weight:bold; color:#2f3542;">📊 <b>Attendance Record:</b> ${displaySummary}</p><div class="btn-group"><a href="tel:${p.mobile}" class="action-btn">📞 CALL</a>${p.landline ? `<a href="tel:${p.landline}" class="action-btn">☎️ LANDLINE</a>` : ""}<a href="https://wa.me/${p.whatsapp}" class="action-btn">💬 WHATSAPP</a></div></div>`;
     }
 
     function toggleNightMode() {
@@ -862,7 +876,6 @@
         document.body.style.zoom = Math.min(Math.max(currentZoom, 0.8), 1.5);
     }
     function goHome() { location.reload(); }
-    
     function togglePS(header) {
         const content = header.nextElementSibling;
         const icon = header.querySelector('.ps-icon');
@@ -874,7 +887,6 @@
             icon.innerText = '▲';
         }
     }
-    
     function showSection(id, btn) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -883,7 +895,6 @@
         btn.classList.add('active');
         btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
-    
     function globalFilter() {
         const term = document.getElementById('globalSearch').value.toLowerCase();
         const activeSection = document.querySelector('.section.active');
