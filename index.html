@@ -349,12 +349,9 @@
         }
 
         startLiveWidgetClock();
-        
-        // 🎯 क्लाउड सिमुलेशन इंजन: हर 5 सेकंड में हिडन बैकग्राउंड अलर्ट्स चेक करना
         startBackgroundAlertPoller();
     };
 
-    // 🎯 बैकग्राउंड ऑटो-पॉलिंग इंजन (हर 5 सेकंड में अन्य फ़ोर्स के फ़ोन चेक करेगा)
     function startBackgroundAlertPoller() {
         if(pollInterval) clearInterval(pollInterval);
         pollInterval = setInterval(() => {
@@ -363,10 +360,7 @@
             
             if (activeCloudAlert) {
                 let alertData = JSON.parse(activeCloudAlert);
-                
-                // अगर कोई नया अलर्ट आया है जो इस मोबाइल ने अभी तक एक्नॉलेज (बंद) नहीं किया है
                 if (alertData.alertId !== acknowledgedAlertId) {
-                    // सिर्फ दूसरों के मोबाइल पर वाइब्रेशन और सायरन पॉप-अप एक्टिवेट करें
                     if (document.getElementById('liveIncomingAlert').style.display !== "block") {
                         triggerIncomingAlertUI(alertData);
                     }
@@ -375,7 +369,6 @@
         }, 5000); 
     }
 
-    // 🎯 लाइव अलर्ट एक्टिवेशन लॉजिक (पॉप-अप + वाइब्रेशन + सायरन)
     function triggerIncomingAlertUI(alertData) {
         document.getElementById('alertSenderDetails').innerText = `From: ${alertData.senderName} (${alertData.senderRank.toUpperCase()})`;
         document.getElementById('alertBodyText').innerText = alertData.alertText;
@@ -400,7 +393,6 @@
         globalSirenAudio.play().catch(e => console.log("साउंड लोडिंग"));
     }
 
-    // 🎯 फिक्स: संदेश भेजते ही यह क्लाउड हब में सेव होगा और व्हाट्सएप ग्रुप पर भी सूचित करेगा
     function sendImmediateBroadcast() {
         let authName = document.getElementById('authOfficerName').value.trim();
         let authRank = document.getElementById('authOfficerRank').value;
@@ -426,9 +418,7 @@
             mediaUrl: mediaUrl
         };
 
-        // 🎯 इसे क्लाउड मेमोरी सिंक (साझा लोकलसिंक) में पुश करें ताकि 5 सेकंड में सभी मोबाइलों पर ट्रिगर हो जाए
         localStorage.setItem('global_cloud_emergency_alert', JSON.stringify(cloudPayload));
-        // खुद के फोन के लिए इसे पहले ही एक्नॉलेज मार्क कर दें ताकि खुद के फोन पर फालतू पॉपअप न आए
         localStorage.setItem('last_acknowledged_alert_id', uniqueAlertId);
 
         alert(`📢 इमरजेंसी ब्रॉडकास्ट सक्रिय!\n\nसफलतापूर्वक सभी ऑन-ड्यूटी अधिकारियों के मोबाइल पर सायरन और पॉप-अप कमांड तत्काल फायर कर दिया गया है।`);
@@ -455,13 +445,11 @@
         if(vibrationInterval) clearInterval(vibrationInterval);
         if(navigator.vibrate) navigator.vibrate(0);
         
-        // इस अलर्ट आईडी को एक्नॉलेज लॉक में डाल दें ताकि दोबारा न बजे
         let activeCloudAlert = localStorage.getItem('global_cloud_emergency_alert');
         if (activeCloudAlert) {
             let alertData = JSON.parse(activeCloudAlert);
             localStorage.setItem('last_acknowledged_alert_id', alertData.alertId);
         }
-
         alert("✅ अलर्ट सफलतापूर्वक एक्नॉलेज (प्राप्त) कर लिया गया है।");
     }
 
@@ -681,7 +669,17 @@
         let trackingDetails = (statusClean === 'duty' || statusClean === 'on-duty') ? `<p style="color:#ff6600; font-weight:bold;">📍 <b>Duty Post:</b> ${p.duty_post}</p><p style="font-size:12px;">🧭 <b>In GPS:</b> ${p.in_gps}</p><p style="font-size:12px; color:#2c3e50;">🕒 <b>Joined At:</b> ${p.in_time}</p>` : "";
         let summaryParts = p.summary.split('|').map(x => x.trim());
         let totalSeconds = parseInt(summaryParts[2].split(':')[1]) || 0;
-        let displaySummary = (statusClean === 'absent' && localStorage.getItem(`lastJoinDate_${p.name}`) !== getIndianISTDateTime().split("|")[0].trim()) ? `P:${parseInt(summaryParts[0].split(':')[1])} | A:${parseInt(summaryParts[1].split(':')[1]) + 1} | Hrs:${parseSecondsToHMS(totalSeconds)}` : `${summaryParts[0]} | ${summaryParts[1]} | Hrs:${parseSecondsToHMS(totalSeconds)}`;
+        let formattedTimeLive = parseSecondsToHMS(totalSeconds);
+        let currentDayOnly = getIndianISTDateTime().split("|")[0].trim();
+        let lastJoinDate = localStorage.getItem(`lastJoinDate_${p.name}`) || '';
+        let displaySummary = p.summary;
+        if (statusClean === 'absent' && lastJoinDate !== currentDayOnly) {
+            let pCount = parseInt(summaryParts[0].split(':')[1]);
+            let aCount = parseInt(summaryParts[1].split(':')[1]) + 1; 
+            displaySummary = `P:${pCount} | A:${aCount} | Hrs:${formattedTimeLive}`;
+        } else {
+            displaySummary = `${summaryParts[0]} | ${summaryParts[1]} | Hrs:${formattedTimeLive}`;
+        }
         return `<div class="list-card"><span class="status-badge ${badgeClass}">${badgeText}</span><h3 style="color:var(--police-blue); margin-top:0; font-weight:900; font-size: 20px; padding-right: 90px;">${p.name || 'N/A'}</h3><p>🎖️ <b>Rank:</b> ${p.rank || 'N/A'} (${forceType})</p><p>📞 <b>Mobile:</b> ${p.mobile || 'N/A'}</p>${trackingDetails}<p style="background:#f1f2f6; padding:5px 10px; border-radius:10px; font-size:12px; font-weight:bold; color:#2f3542;">📊 <b>Attendance Record:</b> ${p.summary.includes('Hrs') ? displaySummary : p.summary}</p><div class="btn-group"><a href="tel:${p.mobile}" class="action-btn">📞 CALL</a>${p.landline ? `<a href="tel:${p.landline}" class="action-btn">☎️ LANDLINE</a>` : ""}<a href="https://wa.me/${p.whatsapp}" class="action-btn">💬 WHATSAPP</a></div></div>`;
     }
 
