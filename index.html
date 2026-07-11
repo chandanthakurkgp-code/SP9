@@ -489,6 +489,7 @@
         return `${hrs}h:${mins}m:${secs}s`;
     }
 
+    // 🎯 फिक्स: बिना एरर के गूगल शीट के शुद्ध डेटा को पार्स और लोड करने वाला मजबूत फंक्शन
     function loadGoogleSheetDirectly() {
         const url = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=csv&gid=0&v=` + Date.now();
         fetch(url)
@@ -512,6 +513,7 @@
                 if(!lines[i].trim()) continue;
                 let cols = lines[i].split(',').map(c => c.trim().replace(/^["']|["']$/g, ""));
                 let pName = nameIdx !== -1 && cols[nameIdx] ? cols[nameIdx].trim() : 'N/A';
+                if(pName === 'N/A' || pName === '') continue; // अगर नाम नहीं है तो छोड़ें
                 
                 let savedStatus = localStorage.getItem(`status_${pName}`) || (statusIdx !== -1 && cols[statusIdx] ? cols[statusIdx].trim() : 'Off-Duty');
                 let savedPost = localStorage.getItem(`post_${pName}`) || (postIdx !== -1 && cols[postIdx] ? cols[postIdx].trim() : 'N/A');
@@ -530,16 +532,22 @@
                     type: typeIdx !== -1 && cols[typeIdx] ? cols[typeIdx].trim().toLowerCase() : '',
                     ps_name: psNameIdx !== -1 && cols[psNameIdx] ? cols[psNameIdx].trim() : '',
                     force_type: forceTypeIdx !== -1 && cols[forceTypeIdx] ? cols[forceTypeIdx].trim() : 'Officer',
-                    name: pName, rank: rankIdx !== -1 && cols[rankIdx] ? cols[rankIdx].trim() : 'N/A',
+                    name: pName, 
+                    rank: rankIdx !== -1 && cols[rankIdx] ? cols[rankIdx].trim() : 'N/A',
                     mobile: mobileIdx !== -1 && cols[mobileIdx] ? cols[mobileIdx].trim() : 'N/A',
                     landline: landlineIdx !== -1 && cols[landlineIdx] ? cols[landlineIdx].trim() : '',
                     whatsapp: whatsappIdx !== -1 && cols[whatsappIdx] ? cols[whatsappIdx].trim() : '',
-                    status: savedStatus, duty_post: savedPost, in_time: savedInTime, out_time: savedOutTime,
-                    in_gps: savedInGps, out_gps: savedOutGps, summary: savedSummary
+                    status: savedStatus, 
+                    duty_post: savedPost, 
+                    in_time: savedInTime, 
+                    out_time: savedOutTime,
+                    in_gps: savedInGps, 
+                    out_gps: savedOutGps, 
+                    summary: savedSummary
                 });
             }
-            buildDynamicUI();
-        }).catch(err => console.error(err));
+            buildDynamicUI(); // UI बिल्डर को फायर करें
+        }).catch(err => console.error("गूगल शीट लोड एरर: ", err));
     }
 
     function handleDutyAction(actionType) {
@@ -640,10 +648,13 @@
         stationGroupKeys.forEach(key => { if(shopData[key] && shopData[key].partners) shopData[key].partners.sort((a, b) => a.ps_name.localeCompare(b.ps_name)); });
         const tabMenu = document.getElementById('tabMenu'), contentArea = document.getElementById('contentArea');
         tabMenu.innerHTML = ""; contentArea.innerHTML = "";
+        
         createTab("📂 DIRECTORY", "directory", true);
         Object.keys(shopData).forEach(key => createTab(shopData[key].title, key, false));
+        
         const dirSection = document.createElement('div'); dirSection.id = 'directory'; dirSection.className = "section active";
         let allHtml = "";
+        
         Object.keys(shopData).forEach(key => {
             if (shopData[key].partners.length === 0) return;
             const section = document.createElement('div'); section.id = key; section.className = "section";
@@ -661,26 +672,43 @@
         document.getElementById('globalSearch').onkeyup = globalFilter;
     }
 
+    function createTab(text, id, active) {
+        const btn = document.createElement('button');
+        btn.className = `tab-btn ${active ? 'active' : ''}`;
+        btn.innerText = text;
+        btn.onclick = (e) => showSection(id, e.target);
+        document.getElementById('tabMenu').appendChild(btn);
+    }
+
     function createCard(p) {
         let forceType = p.force_type.trim(), statusClean = p.status.toLowerCase();
         let badgeClass = 'off', badgeText = '⚪ Off Duty';
         if (statusClean === 'duty' || statusClean === 'on-duty') { badgeClass = 'on'; badgeText = '🟢 On Duty'; }
         else if (statusClean === 'absent') { badgeClass = 'absent'; badgeText = '🔴 Absent'; }
         let trackingDetails = (statusClean === 'duty' || statusClean === 'on-duty') ? `<p style="color:#ff6600; font-weight:bold;">📍 <b>Duty Post:</b> ${p.duty_post}</p><p style="font-size:12px;">🧭 <b>In GPS:</b> ${p.in_gps}</p><p style="font-size:12px; color:#2c3e50;">🕒 <b>Joined At:</b> ${p.in_time}</p>` : "";
+        
         let summaryParts = p.summary.split('|').map(x => x.trim());
-        let totalSeconds = parseInt(summaryParts[2].split(':')[1]) || 0;
+        let totalSeconds = 0;
+        if(summaryParts[2]) {
+            totalSeconds = parseInt(summaryParts[2].split(':')[1]) || 0;
+        }
+        
         let formattedTimeLive = parseSecondsToHMS(totalSeconds);
         let currentDayOnly = getIndianISTDateTime().split("|")[0].trim();
         let lastJoinDate = localStorage.getItem(`lastJoinDate_${p.name}`) || '';
-        let displaySummary = p.summary;
+        let displaySummary = "";
+        
         if (statusClean === 'absent' && lastJoinDate !== currentDayOnly) {
-            let pCount = parseInt(summaryParts[0].split(':')[1]);
-            let aCount = parseInt(summaryParts[1].split(':')[1]) + 1; 
+            let pCount = parseInt(summaryParts[0].split(':')[1]) || 0;
+            let aCount = (parseInt(summaryParts[1].split(':')[1]) || 0) + 1; 
             displaySummary = `P:${pCount} | A:${aCount} | Hrs:${formattedTimeLive}`;
         } else {
-            displaySummary = `${summaryParts[0]} | ${summaryParts[1]} | Hrs:${formattedTimeLive}`;
+            let pCount = parseInt(summaryParts[0].split(':')[1]) || 0;
+            let aCount = parseInt(summaryParts[1].split(':')[1]) || 0;
+            displaySummary = `P:${pCount} | A:${aCount} | Hrs:${formattedTimeLive}`;
         }
-        return `<div class="list-card"><span class="status-badge ${badgeClass}">${badgeText}</span><h3 style="color:var(--police-blue); margin-top:0; font-weight:900; font-size: 20px; padding-right: 90px;">${p.name || 'N/A'}</h3><p>🎖️ <b>Rank:</b> ${p.rank || 'N/A'} (${forceType})</p><p>📞 <b>Mobile:</b> ${p.mobile || 'N/A'}</p>${trackingDetails}<p style="background:#f1f2f6; padding:5px 10px; border-radius:10px; font-size:12px; font-weight:bold; color:#2f3542;">📊 <b>Attendance Record:</b> ${p.summary.includes('Hrs') ? displaySummary : p.summary}</p><div class="btn-group"><a href="tel:${p.mobile}" class="action-btn">📞 CALL</a>${p.landline ? `<a href="tel:${p.landline}" class="action-btn">☎️ LANDLINE</a>` : ""}<a href="https://wa.me/${p.whatsapp}" class="action-btn">💬 WHATSAPP</a></div></div>`;
+        
+        return `<div class="list-card"><span class="status-badge ${badgeClass}">${badgeText}</span><h3 style="color:var(--police-blue); margin-top:0; font-weight:900; font-size: 20px; padding-right: 90px;">${p.name || 'N/A'}</h3><p>🎖️ <b>Rank:</b> ${p.rank || 'N/A'} (${forceType})</p><p>📞 <b>Mobile:</b> ${p.mobile || 'N/A'}</p>${trackingDetails}<p style="background:#f1f2f6; padding:5px 10px; border-radius:10px; font-size:12px; font-weight:bold; color:#2f3542;">📊 <b>Attendance Record:</b> ${displaySummary}</p><div class="btn-group"><a href="tel:${p.mobile}" class="action-btn">📞 CALL</a>${p.landline ? `<a href="tel:${p.landline}" class="action-btn">☎️ LANDLINE</a>` : ""}<a href="https://wa.me/${p.whatsapp}" class="action-btn">💬 WHATSAPP</a></div></div>`;
     }
 
     function toggleNightMode() { document.body.classList.toggle('night-mode'); localStorage.setItem('theme', document.body.classList.contains('night-mode') ? 'night' : 'light'); updateModeButton(document.body.classList.contains('night-mode')); }
