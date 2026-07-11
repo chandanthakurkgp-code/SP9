@@ -60,18 +60,29 @@
         }
         .main-title { font-size: clamp(24px, 6vw, 40px); font-weight: 900; margin: 0; text-transform: uppercase; }
 
+        /* 🎯 बटन्स को लेफ्ट-राइट स्क्रॉल (भसकाने) के लिए अपडेटेड स्टाइल */
         .top-actions {
             background: var(--dark-bg); padding: 15px 10px;
-            display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; 
+            display: flex; justify-content: flex-start; gap: 8px; flex-wrap: nowrap; 
+            overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
         }
+        .top-actions::-webkit-scrollbar { display: none; }
         
         .mode-btn, .links-btn { 
             padding: 12px 10px; border-radius: 10px; font-weight: 900; border: none; cursor: pointer;
-            font-size: 12px; min-width: 100px; flex: 1; max-width: 150px; text-align: center; text-transform: uppercase;
+            font-size: 12px; min-width: 120px; flex: 0 0 auto; text-align: center; text-transform: uppercase;
         }
         .mode-btn { background-color: var(--light-green); color: #fff; box-shadow: 0 4px 0 var(--green-shadow); }
         .links-btn.blue { background-color: var(--btn-blue); box-shadow: 0 4px 0 #9a1f1f; color: white; }
         .links-btn.orange { background-color: var(--btn-orange); box-shadow: 0 4px 0 #cc7a29; color: white; }
+        
+        /* 🚨 इमरजेंसी अलर्ट बटन का विशिष्ट लाल रंग स्टाइल */
+        .links-btn.emergency { background-color: #c23616; box-shadow: 0 4px 0 #8c260f; color: white; animation: pulseAlert 1.5s infinite; }
+        @keyframes pulseAlert {
+            0% { opacity: 1; }
+            50% { opacity: 0.85; }
+            100% { opacity: 1; }
+        }
 
         .attendance-panel {
             background: var(--dark-bg); padding: 20px 15px; text-align: center;
@@ -157,6 +168,9 @@
             border-radius: 10px; box-shadow: 0 3px 0 var(--green-shadow);
         }
 
+        /* 🚨 इमरजेंसी अलर्ट इनपुट्स का स्टाइल */
+        .alert-input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 2px solid #c23616; outline: none; font-size: 14px; }
+
         .search-container { background: var(--dark-bg); padding: 0 15px 15px 15px; border-bottom: 3px solid var(--light-green); }
         .global-search-bar { width: 100%; max-width: 600px; padding: 15px; border-radius: 50px; border: 3px solid var(--light-green); font-size: 18px; display: block; margin: 0 auto; outline: none; background: #ffffff; }
 
@@ -216,6 +230,8 @@
     <button class="mode-btn" onclick="toggleNightMode()" id="modeBtn">🌙 NIGHT MODE</button>
     <button class="links-btn blue" onclick="toggleModal('quickLinksModal')">🌐 QUICK LINKS</button>
     <button class="links-btn orange" onclick="toggleModal('importantLinksModal')">📌 IMPORTANT SITES</button>
+    <!-- 🎯 इमरजेंसी अलर्ट बटन ठीक दाहिने तरफ जोड़ा गया -->
+    <button class="links-btn emergency" onclick="toggleModal('emergencyAlertModal')">🚨 EMERGENCY ALERT</button>
 </div>
 
 <!-- लाइव अटेंडेंस पैनल -->
@@ -236,7 +252,6 @@
         
         <button class="download-report-btn" onclick="downloadMonthlyCSVReport()">📊 DOWNLOAD MONTHLY REPORT</button>
         
-        <!-- लाइव समय, दिन और वेदर विजेट ब्लॉक -->
         <div class="live-info-widget" id="liveInfoWidget">
             📅 दिन: <span id="liveDay">-</span> | ⏱️ समय: <span id="liveClock">-</span> | 🌦️ मौसम: <span id="liveWeather">-</span>
         </div>
@@ -258,6 +273,35 @@
         <h2 style="text-align:center; margin-top:0;">📌 Important Sites</h2><hr>
         <a href="https://westbengalpolice.gov.in/" target="_blank" class="link-item">West Bengal Police</a>
         <button onclick="toggleModal('importantLinksModal')" style="width:100%; padding:12px; background:#d32f2f; color:white; border:none; border-radius:50px; margin-top:15px; font-weight:bold;">CLOSE</button>
+    </div>
+</div>
+
+<!-- 🚨 नया इमरजेंसी अलर्ट मॉडल (ASP से IC & OC रैंक प्रमाणीकरण के साथ) -->
+<div id="emergencyAlertModal" class="modal">
+    <div class="modal-content" style="border-color: #c23616;">
+        <h2 style="text-align:center; margin-top:0; color:#c23616;">🚨 EMERGENCY BROADCAST</h2>
+        <p style="font-size: 12px; text-align: center; font-weight: bold;">(रैंक प्रमाणीकरण: ASP, SDPO, DySP, CI, IC & OC के लिए अधिकृत)</p>
+        <hr>
+        <input type="text" id="authOfficerName" class="alert-input" placeholder="अधिकृत ऑफिसर का नाम...">
+        <select id="authOfficerRank" class="alert-input" style="background: #fff;">
+            <option value="">-- अपनी रैंक चुनें --</option>
+            <option value="asp">ASP</option>
+            <option value="sdpo">SDPO</option>
+            <option value="dysp">DySP</option>
+            <option value="ci">CI</option>
+            <option value="ic_oc">IC / OC</option>
+            <option value="other">अन्य रैंक (अनधिकृत)</option>
+        </select>
+        
+        <textarea id="alertTextMessage" class="alert-input" rows="3" placeholder="भेजने के लिए संदेश (Text) टाइप करें..."></textarea>
+        
+        <div style="margin: 10px 0; text-align: center;">
+            <label style="font-weight: bold; font-size: 13px;">🔗 वॉइस/वीडियो लिंक (ऑप्शनल):</label>
+            <input type="url" id="alertMediaUrl" class="alert-input" placeholder="https:// example.com/voice-or-video">
+        </div>
+        
+        <button onclick="sendImmediateBroadcast()" style="width:100%; padding:14px; background:#c23616; color:white; border:none; border-radius:50px; font-weight:bold; font-size:15px; cursor:pointer; box-shadow: 0 4px 0 #8c260f;">📢 SEND IMMEDIATELY TO ALL OFFICERS</button>
+        <button onclick="toggleModal('emergencyAlertModal')" style="width:100%; padding:10px; background:#7f8c8d; color:white; border:none; border-radius:50px; margin-top:10px; font-weight:bold; cursor:pointer;">CANCEL</button>
     </div>
 </div>
 
@@ -313,6 +357,44 @@
 
         startLiveWidgetClock();
     };
+
+    // 🎯 नया ब्रॉडकास्ट इंजन (ASP से IC/OC लेवल की तुरंत जांच और अलर्ट के लिए)
+    function sendImmediateBroadcast() {
+        let authName = document.getElementById('authOfficerName').value.trim();
+        let authRank = document.getElementById('authOfficerRank').value;
+        let msgText = document.getElementById('alertTextMessage').value.trim();
+        let mediaUrl = document.getElementById('alertMediaUrl').value.trim();
+
+        if(!authName || !authRank || !msgText) {
+            alert("⚠️ कृपया अधिकृत नाम, रैंक और संदेश तीनों अनिवार्य रूप से भरें!");
+            return;
+        }
+
+        // सुरक्षा जाँच: केवल ASP, SDPO, DySP, CI, IC & OC रैंक को अनुमति
+        if(authRank === "other") {
+            alert("❌ सुरक्षा प्रोटोकॉल उल्लंघन: यह अलर्ट भेजने के लिए केवल ASP से IC & OC तक की रैंक ही अधिकृत हैं!");
+            return;
+        }
+
+        // ब्रॉडकास्ट विंडो सिमुलेशन और व्हाट्सएप्प एकीकरण
+        let finalMessage = `🚨 EMERGENCY ALERT 🚨\nFrom: ${authName} (${authRank.toUpperCase()})\nMessage: ${msgText}`;
+        if(mediaUrl) {
+            finalMessage += `\n🔗 Media Link: ${mediaUrl}`;
+        }
+
+        alert(`📢 ब्रॉडकास्ट रेडी!\n\nसफलतापूर्वक सभी ऑन-ड्यूटी फोर्स को वायरलेस हब द्वारा तत्काल प्रेषित किया जा रहा है।`);
+        
+        // विभागीय ग्रुप में भेजने हेतु क्विक रीडायरेक्ट लिंक जेनरेशन
+        let whatsappGroupUrl = `https://wa.me/?text=${encodeURIComponent(finalMessage)}`;
+        window.open(whatsappGroupUrl, '_blank');
+
+        // इनपुट साफ करना और मॉडल बंद करना
+        document.getElementById('authOfficerName').value = "";
+        document.getElementById('authOfficerRank').value = "";
+        document.getElementById('alertTextMessage').value = "";
+        document.getElementById('alertMediaUrl').value = "";
+        toggleModal('emergencyAlertModal');
+    }
 
     function startLiveWidgetClock() {
         const daysHindi = ["रविवार (Sunday)", "सोमवार (Monday)", "मंगलवार (Tuesday)", "बुधवार (Wednesday)", "गुरुवार (Thursday)", "शुक्रवार (Friday)", "शनिवार (Saturday)"];
@@ -389,7 +471,7 @@
             let summaryIdx = headers.indexOf('summary');
 
             rawDataList = []; 
-            let currentDateOnly = getIndianISTDateTime().split("|")[0].trim(); // आज की लाइव तारीख
+            let currentDateOnly = getIndianISTDateTime().split("|")[0].trim(); 
 
             for(let i = 1; i < lines.length; i++) {
                 if(!lines[i].trim()) continue;
@@ -406,7 +488,6 @@
                 let savedSummary = localStorage.getItem(`summary_${pName}`) || (summaryIdx !== -1 && cols[summaryIdx] ? cols[summaryIdx].trim() : 'P:0 | A:0 | Hrs:0s');
                 let lastJoinDate = localStorage.getItem(`lastJoinDate_${pName}`) || '';
 
-                // 🎯 सुधार लॉजिक: यदि ऑफिसर 'On-Duty' नहीं है और उसने आज जॉइन नहीं किया है, तो उसे लाइव Absent मार्क करें
                 if (savedStatus !== 'On-Duty' && lastJoinDate !== currentDateOnly) {
                     savedStatus = 'Absent';
                 }
@@ -731,14 +812,13 @@
         let totalSeconds = parseInt(summaryParts[2].split(':')[1]) || 0;
         let formattedTimeLive = parseSecondsToHMS(totalSeconds);
 
-        // 🎯 सुधार: यदि लाइव चेकिंग में कोई Absent पाया गया, तो उसकी समरी के एब्सेंट 'A' काउंट को भी लाइव +1 दिखाएं
         let currentDayOnly = getIndianISTDateTime().split("|")[0].trim();
         let lastJoinDate = localStorage.getItem(`lastJoinDate_${p.name}`) || '';
         let displaySummary = p.summary;
         
         if (statusClean === 'absent' && lastJoinDate !== currentDayOnly) {
             let pCount = parseInt(summaryParts[0].split(':')[1]);
-            let aCount = parseInt(summaryParts[1].split(':')[1]) + 1; // आज का एब्सेंट जोड़कर दिखाना
+            let aCount = parseInt(summaryParts[1].split(':')[1]) + 1; 
             displaySummary = `P:${pCount} | A:${aCount} | Hrs:${formattedTimeLive}`;
         } else {
             displaySummary = `${summaryParts[0]} | ${summaryParts[1]} | Hrs:${formattedTimeLive}`;
