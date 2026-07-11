@@ -77,10 +77,44 @@
             background: var(--dark-bg); padding: 20px 15px; text-align: center;
             border-bottom: 3px solid var(--light-green);
         }
+
+        /* 🎯 नया धमाकेदार चेंज: अटेंडेंस बॉक्स के चारों ओर पुलिस लाइट की तरह चलता हुआ और चमकता हुआ (Glow & Chasing) बॉर्डर इफेक्ट */
         .attendance-box {
             background: var(--card-bg); max-width: 600px; margin: 0 auto; padding: 20px;
-            border-radius: 20px; border: 4px solid var(--police-blue); box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            border-radius: 20px; 
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            
+            /* एनिमेटेड बॉर्डर के लिए सेटिंग */
+            border: 4px solid transparent;
+            border-image: linear-gradient(90deg, #FF6600, #ff0000, #002699, #FF6600) 1;
+            animation: policeBorderGlow 3s linear infinite;
         }
+
+        /* 🚨 पुलिस लाइट बॉर्डर को घुमाने और चमकाने का एनिमेटेड इंजन */
+        @keyframes policeBorderGlow {
+            0% {
+                border-image: linear-gradient(0deg, #FF6600, #ff0000, #002699, #FF6600) 1;
+                box-shadow: 0 0 15px rgba(255, 102, 0, 0.6), 0 0 5px rgba(0, 38, 153, 0.4);
+            }
+            25% {
+                border-image: linear-gradient(90deg, #002699, #FF6600, #ff0000, #002699) 1;
+                box-shadow: 0 0 20px rgba(255, 0, 0, 0.8), 0 0 8px rgba(255, 102, 0, 0.5);
+            }
+            50% {
+                border-image: linear-gradient(180deg, #ff0000, #002699, #FF6600, #ff0000) 1;
+                box-shadow: 0 0 15px rgba(0, 38, 153, 0.7), 0 0 5px rgba(255, 0, 0, 0.5);
+            }
+            75% {
+                border-image: linear-gradient(270deg, #FF6600, #ff0000, #002699, #FF6600) 1;
+                box-shadow: 0 0 20px rgba(255, 102, 0, 0.8), 0 0 8px rgba(0, 38, 153, 0.6);
+            }
+            100% {
+                border-image: linear-gradient(360deg, #FF6600, #ff0000, #002699, #FF6600) 1;
+                box-shadow: 0 0 15px rgba(255, 102, 0, 0.6), 0 0 5px rgba(0, 38, 153, 0.4);
+            }
+        }
+
         .post-input {
             width: 85%; padding: 12px; border-radius: 50px;
             border: 2px solid var(--police-blue); font-size: 15px;
@@ -245,7 +279,6 @@
 </div>
 
 <script>
-    /* 🎯 फिक्स: यहाँ शीट आईडी लिंक को 100% सही स्पेलिंग 'COqVRSk...' के साथ री-स्टोर कर दिया गया है */
     const GOOGLE_SHEET_ID = "1dQW0F83Sn9hCOqVRSkIvtReOu31oh9tM0dF6cSNfyl0"; 
 
     let rawDataList = []; 
