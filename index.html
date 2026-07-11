@@ -140,9 +140,15 @@
         .list-card p b { color: var(--text-color); }
         
         .status-badge { position: absolute; top: 15px; right: 15px; padding: 5px 12px; border-radius: 50px; font-size: 11px; font-weight: 900; color: white; text-transform: uppercase; }
-        .status-badge.on { background-color: var(--status-on); }
+        .status-badge.on { background-color: var(--status-on); animation: pulse-glow 1s infinite alternate; }
         .status-badge.off { background-color: var(--status-off); }
         .status-badge.absent { background-color: var(--status-absent); }
+
+        /* 🚨 ON-DUTY ब्लिंकिंग के लिए तेज लाइट इफ़ेक्ट */
+        @keyframes pulse-glow {
+            0% { background-color: #4cd137; box-shadow: 0 0 4px #4cd137; }
+            100% { background-color: #2ecc71; box-shadow: 0 0 15px #2ecc71, 0 0 25px #4cd137; }
+        }
 
         .ps-header {
             background-color: var(--light-green); color: #ffffff; padding: 15px;
