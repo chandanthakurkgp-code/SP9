@@ -40,6 +40,29 @@
             -webkit-font-smoothing: antialiased;
         }
 
+        /* 🔒 लॉगिन स्क्रीन डिजाइन */
+        #loginScreen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #1a1a1a; display: flex; justify-content: center;
+            align-items: center; z-index: 99999; padding: 20px;
+        }
+        .login-box {
+            background: #ffffff; padding: 30px; border-radius: 20px;
+            border: 5px solid var(--light-green); max-width: 400px; width: 100%;
+            text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .login-input {
+            width: 100%; padding: 15px; border-radius: 50px;
+            border: 3px solid var(--light-green); font-size: 18px;
+            text-align: center; margin: 20px 0; outline: none;
+        }
+        .login-submit {
+            width: 100%; padding: 15px; border-radius: 50px;
+            background: var(--police-blue); color: white; font-size: 16px;
+            font-weight: 900; border: none; cursor: pointer;
+            box-shadow: 0 4px 0 var(--green-shadow);
+        }
+
         .main-header { 
             text-align: center; 
             background-color: var(--police-blue); 
@@ -150,77 +173,103 @@
         .zoom-controls { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 4000; }
         .zoom-btn { width: 50px; height: 50px; border-radius: 50%; background-color: var(--light-green); border: 3px solid var(--green-shadow); font-size: 24px; font-weight: 900; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .home-btn { background-color: var(--btn-blue); border-color: #9a1f1f; color: white; }
+        .logout-btn { background-color: #7f8c8d !important; color: white !important; }
+
+        /* 📄 प्रिंट और PDF के लिए विशेष स्टाइलिंग */
+        @media print {
+            body { background: white; color: black; }
+            .main-header, .top-actions, .attendance-panel, .search-container, #tabMenu, .zoom-controls, .btn-group, .status-badge { display: none !important; }
+            .container, .section { display: block !important; }
+            .list-card { border: 1px solid #ccc; page-break-inside: avoid; }
+        }
     </style>
 </head>
 <body>
 
-<div class="main-header">
-    <h1 class="main-title">SUPERINTENDENT OF POLICE</h1>
-    <div class="main-subtitle">PASCHIM MEDINIPUR</div>
+<!-- 🔑 लॉगिन स्क्रीन (रजिस्टर्ड मोबाइल नंबर द्वारा सुरक्षा) -->
+<div id="loginScreen">
+    <div class="login-box">
+        <h2 style="color:var(--police-blue); margin:0;">PASCHIM MEDINIPUR POLICE</h2>
+        <p style="color:#555; font-weight:bold; margin-top:5px;">सुरक्षित लॉग-इन सिस्टम</p>
+        <input type="tel" id="userMobile" class="login-input" placeholder="अपना 10-अंकीय मोबाइल नंबर दर्ज करें" maxlength="10">
+        <button class="login-submit" onclick="verifyLogin()">प्रवेश करें (LOGIN)</button>
+        <p id="loginError" style="color:red; font-weight:bold; margin-top:10px; display:none;">⚠️ यह नंबर रिकॉर्ड में नहीं है!</p>
+    </div>
 </div>
 
-<div class="top-actions">
-    <button class="mode-btn" onclick="toggleNightMode()" id="modeBtn">🌙 NIGHT MODE</button>
-    <button class="links-btn blue" onclick="toggleModal('quickLinksModal')">🌐 QUICK LINKS</button>
-    <button class="links-btn orange" onclick="toggleModal('importantLinksModal')">📌 IMPORTANT SITES</button>
-</div>
+<!-- 📱 मुख्य ऍप कंटेंट -->
+<div id="appContent" style="display:none;">
+    <div class="main-header">
+        <h1 class="main-title">SUPERINTENDENT OF POLICE</h1>
+        <div class="main-subtitle">PASCHIM MEDINIPUR</div>
+    </div>
 
-<!-- लाइव अटेंडेंस पैनल -->
-<div class="attendance-panel">
-    <div class="attendance-box">
-        <h3 style="margin-top:0; color:var(--police-blue);">🚨 LIVE ATTENDANCE (हाजिरी दर्ज करें)</h3>
-        
-        <div id="dutyFormArea">
-            <input type="text" id="dutyUserName" class="post-input" placeholder="अपना सही नाम टाइप करें...">
-            <input type="text" id="dutyPostName" class="post-input" placeholder="ड्यूटी पोस्ट/स्थान का नाम लिखें...">
-            <button class="duty-master-btn join" onclick="handleDutyAction('join')">🚨 JOIN DUTY</button>
+    <div class="top-actions">
+        <button class="mode-btn" onclick="toggleNightMode()" id="modeBtn">🌙 NIGHT MODE</button>
+        <button class="links-btn blue" onclick="toggleModal('quickLinksModal')">🌐 QUICK LINKS</button>
+        <button class="links-btn orange" onclick="toggleModal('importantLinksModal')">📌 IMPORTANT SITES</button>
+    </div>
+
+    <div class="attendance-panel">
+        <div class="attendance-box">
+            <h3 id="panelWelcome" style="margin-top:0; color:var(--police-blue);">जय हिन्द, ऑफिसर</h3>
+            
+            <div id="dutyFormArea">
+                <input type="text" id="dutyPostName" class="post-input" placeholder="ड्यूटी पोस्ट/स्थान का नाम लिखें...">
+                <button class="duty-master-btn join" onclick="handleDutyAction('join')">🚨 JOIN DUTY</button>
+            </div>
+            
+            <div id="leaveFormArea" style="display:none;">
+                <p style="font-weight:bold; color:#4cd137;">🔴 आप अभी ऑन-ड्यूटी पर तैनात हैं।</p>
+                <button class="duty-master-btn leave" onclick="handleDutyAction('leave')">🛑 LEAVE DUTY (ड्यूटी समाप्त)</button>
+            </div>
+            
+            <!-- 📄 पीडीएफ/प्रिंट रिपोर्ट बटन -->
+            <button class="download-report-btn" onclick="downloadPDFReport()">📄 DOWNLOAD PDF REPORT</button>
+            
+            <p id="gpsStatus" style="font-size:12px; color:#7f8c8d; margin-top:10px; margin-bottom:0; font-weight:bold;"></p>
         </div>
-        
-        <div id="leaveFormArea" style="display:none;">
-            <p id="activeDutyStatus" style="font-weight:bold; color:#4cd137;"></p>
-            <button class="duty-master-btn leave" onclick="handleDutyAction('leave')">🛑 LEAVE DUTY (ड्यूटी समाप्त)</button>
+    </div>
+
+    <div id="quickLinksModal" class="modal">
+        <div class="modal-content">
+            <h2 style="text-align:center; margin-top:0;">🌐 Quick Links</h2><hr>
+            <a href="https://wmdppolicekhoj.co.in/" target="_blank" class="link-item">Khoj (Police Dept)</a>
+            <button onclick="toggleModal('quickLinksModal')" style="width:100%; padding:12px; background:#d32f2f; color:white; border:none; border-radius:50px; margin-top:15px; font-weight:bold;">CLOSE</button>
         </div>
-        
-        <button class="download-report-btn" onclick="downloadMonthlyCSVReport()">📊 DOWNLOAD MONTHLY REPORT</button>
-        
-        <p id="gpsStatus" style="font-size:12px; color:#7f8c8d; margin-top:10px; margin-bottom:0; font-weight:bold;"></p>
     </div>
-</div>
 
-<div id="quickLinksModal" class="modal">
-    <div class="modal-content">
-        <h2 style="text-align:center; margin-top:0;">🌐 Quick Links</h2><hr>
-        <a href="https://wmdppolicekhoj.co.in/" target="_blank" class="link-item">Khoj (Police Dept)</a>
-        <button onclick="toggleModal('quickLinksModal')" style="width:100%; padding:12px; background:#d32f2f; color:white; border:none; border-radius:50px; margin-top:15px; font-weight:bold;">CLOSE</button>
+    <div id="importantLinksModal" class="modal">
+        <div class="modal-content">
+            <h2 style="text-align:center; margin-top:0;">📌 Important Sites</h2><hr>
+            <a href="https://westbengalpolice.gov.in/" target="_blank" class="link-item">West Bengal Police</a>
+            <button onclick="toggleModal('importantLinksModal')" style="width:100%; padding:12px; background:#d32f2f; color:white; border:none; border-radius:50px; margin-top:15px; font-weight:bold;">CLOSE</button>
+        </div>
     </div>
-</div>
 
-<div id="importantLinksModal" class="modal">
-    <div class="modal-content">
-        <h2 style="text-align:center; margin-top:0;">📌 Important Sites</h2><hr>
-        <a href="https://westbengalpolice.gov.in/" target="_blank" class="link-item">West Bengal Police</a>
-        <button onclick="toggleModal('importantLinksModal')" style="width:100%; padding:12px; background:#d32f2f; color:white; border:none; border-radius:50px; margin-top:15px; font-weight:bold;">CLOSE</button>
+    <div class="search-container">
+        <input type="text" id="globalSearch" class="global-search-bar" placeholder="खोजें...">
     </div>
-</div>
 
-<div class="search-container">
-    <input type="text" id="globalSearch" class="global-search-bar" placeholder="खोजें...">
-</div>
+    <div class="nav-container" id="tabMenu"></div>
+    <div class="container" id="contentArea"></div>
 
-<div class="nav-container" id="tabMenu"></div>
-<div class="container" id="contentArea"></div>
-
-<div class="zoom-controls">
-    <button class="zoom-btn home-btn" onclick="goHome()">🏠</button>
-    <button class="zoom-btn" onclick="changeZoom(0.1)">+</button>
-    <button class="zoom-btn" onclick="changeZoom(-0.1)">−</button>
+    <div class="zoom-controls">
+        <button class="zoom-btn home-btn logout-btn" onclick="logout()" title="लॉगआउट">🔓</button>
+        <button class="zoom-btn home-btn" onclick="goHome()">🏠</button>
+        <button class="zoom-btn" onclick="changeZoom(0.1)">+</button>
+        <button class="zoom-btn" onclick="changeZoom(-0.1)">−</button>
+    </div>
 </div>
 
 <script>
     const GOOGLE_SHEET_ID = "1dQW0F83Sn9hCOqVRSkIvtReOu31oh9tM0dF6cSNfyl0"; 
 
     let rawDataList = []; 
-    let activeDutyUser = null; 
+    let currentUserMobile = "";
+    let loggedInUserObj = null;
+    let isMasterUser = false;
+    let userAssignedPS = "";
 
     let shopData = {
         "asp": { title: "ASP", partners: [] },
@@ -244,24 +293,13 @@
             updateModeButton(true);
         }
         loadGoogleSheetDirectly();
-        
-        const savedActiveUser = localStorage.getItem('activeDutyUser');
-        if(savedActiveUser) {
-            activeDutyUser = savedActiveUser;
-            document.getElementById('dutyFormArea').style.display = "none";
-            document.getElementById('leaveFormArea').style.display = "block";
-            document.getElementById('activeDutyStatus').innerText = `✅ आप वर्तमान में "${activeDutyUser}" के नाम से ऑन-ड्यूटी हैं।`;
-        }
     };
 
     function getIndianISTDateTime() {
-        let options = {
-            timeZone: 'Asia/Kolkata',
-            year: 'numeric', month: '2-digit', day: '2-digit',
-            hour: '2-digit', minute: '2-digit', second: '2-digit',
-            hour12: true
-        };
-        return new Date().toLocaleString('en-US', options);
+        let dateObj = new Date();
+        let dateOptions = { timeZone: 'Asia/Kolkata', day: '2-digit', month: '2-digit', year: 'numeric' };
+        let timeOptions = { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+        return `${dateObj.toLocaleDateString('en-GB', dateOptions)} | ${dateObj.toLocaleTimeString('en-US', timeOptions)}`;
     }
 
     function loadGoogleSheetDirectly() {
@@ -299,83 +337,134 @@
                 if(!lines[i].trim()) continue;
                 let cols = lines[i].split(',').map(c => c.trim().replace(/^["']|["']$/g, ""));
                 
+                let pName = nameIdx !== -1 && cols[nameIdx] ? cols[nameIdx].trim() : 'N/A';
+                
+                // 🔒 🎯 रिफ्रेश होने पर 'NIL' रोकने का स्मार्ट सिंक लॉजिक (Local Memory Check)
+                let savedStatus = localStorage.getItem(`status_${pName}`) || (statusIdx !== -1 && cols[statusIdx] ? cols[statusIdx].trim() : 'Off-Duty');
+                let savedPost = localStorage.getItem(`post_${pName}`) || (postIdx !== -1 && cols[postIdx] ? cols[postIdx].trim() : 'N/A');
+                let savedInTime = localStorage.getItem(`inTime_${pName}`) || (inTimeIdx !== -1 && cols[inTimeIdx] ? cols[inTimeIdx].trim() : '');
+                let savedOutTime = localStorage.getItem(`outTime_${pName}`) || (outTimeIdx !== -1 && cols[outTimeIdx] ? cols[outTimeIdx].trim() : '');
+                let savedInGps = localStorage.getItem(`inGps_${pName}`) || (inGpsIdx !== -1 && cols[inGpsIdx] ? cols[inGpsIdx].trim() : '');
+                let savedOutGps = localStorage.getItem(`outGps_${pName}`) || (outGpsIdx !== -1 && cols[outGpsIdx] ? cols[outGpsIdx].trim() : '');
+                let savedSummary = localStorage.getItem(`summary_${pName}`) || (summaryIdx !== -1 && cols[summaryIdx] ? cols[summaryIdx].trim() : 'P:0 | A:0 | Hrs:0');
+
                 let obj = {
                     type: typeIdx !== -1 && cols[typeIdx] ? cols[typeIdx].trim().toLowerCase() : '',
                     ps_name: psNameIdx !== -1 && cols[psNameIdx] ? cols[psNameIdx].trim() : '',
                     force_type: forceTypeIdx !== -1 && cols[forceTypeIdx] ? cols[forceTypeIdx].trim() : 'Officer',
-                    name: nameIdx !== -1 && cols[nameIdx] ? cols[nameIdx].trim() : 'N/A',
+                    name: pName,
                     rank: rankIdx !== -1 && cols[rankIdx] ? cols[rankIdx].trim() : 'N/A',
                     mobile: mobileIdx !== -1 && cols[mobileIdx] ? cols[mobileIdx].trim() : 'N/A',
                     landline: landlineIdx !== -1 && cols[landlineIdx] ? cols[landlineIdx].trim() : '',
                     whatsapp: whatsappIdx !== -1 && cols[whatsappIdx] ? cols[whatsappIdx].trim() : '',
                     
-                    status: statusIdx !== -1 && cols[statusIdx] && cols[statusIdx].trim() !== "" ? cols[statusIdx].trim() : 'Off-Duty',
-                    duty_post: postIdx !== -1 && cols[postIdx] ? cols[postIdx].trim() : 'N/A',
-                    in_time: inTimeIdx !== -1 && cols[inTimeIdx] ? cols[inTimeIdx].trim() : '',
-                    out_time: outTimeIdx !== -1 && cols[outTimeIdx] ? cols[outTimeIdx].trim() : '',
-                    in_gps: inGpsIdx !== -1 && cols[inGpsIdx] ? cols[inGpsIdx].trim() : '',
-                    out_gps: outGpsIdx !== -1 && cols[outGpsIdx] ? cols[outGpsIdx].trim() : '',
-                    summary: summaryIdx !== -1 && cols[summaryIdx] ? cols[summaryIdx].trim() : 'P:0 | A:0 | Hrs:0'
+                    status: savedStatus,
+                    duty_post: savedPost,
+                    in_time: savedInTime,
+                    out_time: savedOutTime,
+                    in_gps: savedInGps,
+                    out_gps: savedOutGps,
+                    summary: savedSummary
                 };
-
-                if (activeDutyUser && obj.name.toLowerCase() === activeDutyUser.toLowerCase()) {
-                    obj.status = "On-Duty";
-                    obj.duty_post = localStorage.getItem('activeDutyPost') || 'N/A';
-                    obj.in_time = localStorage.getItem('activeDutyInTime') || '';
-                    obj.in_gps = localStorage.getItem('activeDutyInGps') || '';
-                }
-
                 rawDataList.push(obj);
             }
 
-            buildDynamicUI();
+            // ऑटो-लॉगिन चेक
+            const savedMobile = localStorage.getItem('userMobileNumber');
+            if (savedMobile) {
+                processLoginWithMobile(savedMobile, true); 
+            }
         })
         .catch(err => console.error("डेटा लोड करने में समस्या आई।", err));
     }
 
-    // ⚡ सुरक्षा फॉलबैक (Fail-Safe GPS Logic) के साथ सुधरा हुआ अटेंडेंस ट्रैकर
+    function verifyLogin() {
+        const mobileInput = document.getElementById('userMobile').value.trim();
+        if (mobileInput.length < 10) {
+            alert("कृपया सही 10-अंकीय मोबाइल नंबर दर्ज करें!");
+            return;
+        }
+        processLoginWithMobile(mobileInput, false);
+    }
+
+    function processLoginWithMobile(mobileNum, isAutoLogin) {
+        let matchedUser = rawDataList.find(u => u.mobile === mobileNum || u.whatsapp === mobileNum);
+
+        if (!matchedUser) {
+            document.getElementById('loginError').style.display = "block";
+            if(isAutoLogin) logout(); 
+            return;
+        }
+
+        document.getElementById('loginError').style.display = "none";
+        currentUserMobile = mobileNum;
+        loggedInUserObj = matchedUser;
+        localStorage.setItem('userMobileNumber', mobileNum); 
+
+        if (["asp", "sdpo", "dysp", "ci"].includes(matchedUser.type.toLowerCase())) {
+            isMasterUser = true;
+            userAssignedPS = "";
+            document.querySelector('.attendance-panel').style.display = "block";
+            document.getElementById('dutyFormArea').style.display = "none";
+            document.getElementById('leaveFormArea').style.display = "none";
+            document.getElementById('panelWelcome').innerText = `जय हिन्द, ${matchedUser.name} (${matchedUser.rank})`;
+        } else {
+            isMasterUser = false;
+            userAssignedPS = matchedUser.ps_name; 
+            document.querySelector('.attendance-panel').style.display = "block";
+            setupAttendancePanel(matchedUser);
+        }
+
+        document.getElementById('loginScreen').style.display = "none";
+        document.getElementById('appContent').style.display = "block";
+
+        buildDynamicUI();
+    }
+
+    function setupAttendancePanel(user) {
+        document.getElementById('panelWelcome').innerText = `जय हिन्द, ${user.name} (${user.rank})`;
+        let statusClean = user.status.toLowerCase();
+        
+        if (statusClean === 'on-duty' || statusClean === 'duty') {
+            document.getElementById('dutyFormArea').style.display = "none";
+            document.getElementById('leaveFormArea').style.display = "block";
+        } else {
+            document.getElementById('dutyFormArea').style.display = "block";
+            document.getElementById('leaveFormArea').style.display = "none";
+        }
+    }
+
     function handleDutyAction(actionType) {
         const statusField = document.getElementById('gpsStatus');
         statusField.innerText = "🌐 कृपया प्रतीक्षा करें, आपका सटीक GPS लोकेशन कैप्चर किया जा रहा है...";
 
-        // अगर ब्राउज़र सपोर्ट ही नहीं करता
         if (!navigator.geolocation) {
             executeAttendanceLogic(actionType, "GPS Not Supported");
             return;
         }
 
-        // 7 सेकंड के अंदर GPS कनेक्ट करने की कोशिश करेगा, नहीं तो फॉलबैक मोड ऑन कर देगा
         navigator.geolocation.getCurrentPosition((position) => {
             let lat = position.coords.latitude.toFixed(6);
             let lon = position.coords.longitude.toFixed(6);
-            let gpsCoords = `${lat}; ${lon}`;
+            let gpsCoords = `${lat}, ${lon}`;
             executeAttendanceLogic(actionType, gpsCoords);
         }, (error) => {
-            // 🎯 स्मार्ट बैकअप: लोकेशन एरर या डिनाइड होने पर भी हाजिरी बंद नहीं होगी, सीधे सबमिट होगी!
-            console.log("GPS कनेक्ट नहीं हो सका, बैकअप मोड एक्टिवेटेड। एरर कोड:", error.code);
-            executeAttendanceLogic(actionType, "GPS Required/Off");
-        }, { enableHighAccuracy: true, timeout: 7000 }); 
+            executeAttendanceLogic(actionType, "GPS Off/Denied");
+        }, { enableHighAccuracy: true, timeout: 6000 }); 
     }
 
-    // कोर अटेंडेंस प्रोसेसिंग फंक्शन
     function executeAttendanceLogic(actionType, gpsOutput) {
         const statusField = document.getElementById('gpsStatus');
         let currentDateTime = getIndianISTDateTime();
+        let uName = loggedInUserObj.name;
+
+        // डेटाबेस की मुख्य लिस्ट में ढूँढें
+        let matchedUser = rawDataList.find(u => u.name === uName);
 
         if (actionType === 'join') {
-            let nameInput = document.getElementById('dutyUserName').value.trim();
             let postInput = document.getElementById('dutyPostName').value.trim();
-            
-            if (!nameInput || !postInput) {
-                alert("कृपया अपना नाम और ड्यूटी स्थान दोनों भरें!");
-                statusField.innerText = "";
-                return;
-            }
-
-            let matchedUser = rawDataList.find(u => u.name.toLowerCase().includes(nameInput.toLowerCase()));
-
-            if (!matchedUser) {
-                alert("⚠️ दर्ज किया गया नाम डेटाबेस रिकॉर्ड में नहीं मिला।");
+            if (!postInput) {
+                alert("कृपया अपनी ड्यूटी पोस्ट/स्थान का नाम लिखें!");
                 statusField.innerText = "";
                 return;
             }
@@ -391,92 +480,54 @@
             let hrsCount = parseInt(parts[2].split(':')[1]);
             matchedUser.summary = `P:${pCount} | A:${aCount} | Hrs:${hrsCount}`;
 
-            activeDutyUser = matchedUser.name;
-            localStorage.setItem('activeDutyUser', matchedUser.name);
-            localStorage.setItem('activeDutyPost', postInput);
-            localStorage.setItem('activeDutyInTime', currentDateTime);
-            localStorage.setItem('activeDutyInGps', matchedUser.in_gps);
+            // 🔒 🎯 लोकल स्टोरेज में परमानेंट सेविंग ताकि रिफ्रेश होने पर गायब न हो
+            localStorage.setItem(`status_${uName}`, "On-Duty");
+            localStorage.setItem(`post_${uName}`, postInput);
+            localStorage.setItem(`inTime_${uName}`, currentDateTime);
+            localStorage.setItem(`inGps_${uName}`, gpsOutput);
+            localStorage.setItem(`summary_${uName}`, matchedUser.summary);
 
-            document.getElementById('dutyFormArea').style.display = "none";
-            document.getElementById('leaveFormArea').style.display = "block";
-            document.getElementById('activeDutyStatus').innerText = `✅ आप वर्तमान में "${matchedUser.name}" के नाम से ऑन-ड्यूटी हैं।`;
-
-            alert(`🚨 जय हिन्द, ड्यूटी सफलतापूर्वक जॉइन की गई!\n🕒 समय (IST): ${currentDateTime}\n🧭 GPS: ${gpsOutput}`);
+            alert(`🚨 ड्यूटी सफलतापूर्वक जॉइन की गई!`);
         } else if (actionType === 'leave') {
-            let matchedUser = rawDataList.find(u => u.name.toLowerCase() === activeDutyUser.toLowerCase());
-
-            if (matchedUser) {
-                let hrsWorked = 8; 
-                if(matchedUser.in_time) {
-                    try {
-                        let diffMs = Math.abs(new Date(currentDateTime) - new Date(matchedUser.in_time));
-                        hrsWorked = Math.round(diffMs / (1000 * 60 * 60)) || 1;
-                    } catch(e) { hrsWorked = 8; }
-                }
-                matchedUser.status = "Off-Duty";
-                matchedUser.out_time = currentDateTime;
-                matchedUser.out_gps = gpsOutput;
-
-                let parts = matchedUser.summary.split('|').map(p => p.trim());
-                let pCount = parseInt(parts[0].split(':')[1]);
-                let aCount = parseInt(parts[1].split(':')[1]);
-                let hrsCount = parseInt(parts[2].split(':')[1]) + hrsWorked;
-                matchedUser.summary = `P:${pCount} | A:${aCount} | Hrs:${hrsCount}`;
+            let hrsWorked = 8; 
+            if(matchedUser.in_time) {
+                try {
+                    let timePartIn = matchedUser.in_time.split("|")[1].trim();
+                    let timePartOut = currentDateTime.split("|")[1].trim();
+                    let diffMs = Math.abs(new Date("2026/01/01 " + timePartOut) - new Date("2026/01/01 " + timePartIn));
+                    hrsWorked = Math.round(diffMs / (1000 * 60 * 60)) || 1;
+                } catch(e) { hrsWorked = 8; }
             }
+            
+            matchedUser.status = "Off-Duty";
+            matchedUser.out_time = currentDateTime;
+            matchedUser.out_gps = gpsOutput;
 
-            localStorage.removeItem('activeDutyUser');
-            localStorage.removeItem('activeDutyPost');
-            localStorage.removeItem('activeDutyInTime');
-            localStorage.removeItem('activeDutyInGps');
-            activeDutyUser = null;
+            let parts = matchedUser.summary.split('|').map(p => p.trim());
+            let pCount = parseInt(parts[0].split(':')[1]);
+            let aCount = parseInt(parts[1].split(':')[1]);
+            let hrsCount = parseInt(parts[2].split(':')[1]) + hrsWorked;
+            matchedUser.summary = `P:${pCount} | A:${aCount} | Hrs:${hrsCount}`;
 
-            document.getElementById('dutyFormArea').style.display = "block";
-            document.getElementById('leaveFormArea').style.display = "none";
-            document.getElementById('dutyUserName').value = "";
+            // 🔒 🎯 लोकल स्टोरेज में सेविंग
+            localStorage.setItem(`status_${uName}`, "Off-Duty");
+            localStorage.setItem(`outTime_${uName}`, currentDateTime);
+            localStorage.setItem(`outGps_${uName}`, gpsOutput);
+            localStorage.setItem(`summary_${uName}`, matchedUser.summary);
+
             document.getElementById('dutyPostName').value = "";
-
-            alert(`🛑 ड्यूटी सफलतापूर्वक समाप्त!\n🕒 समय (IST): ${currentDateTime}`);
+            alert(`🛑 ड्यूटी सफलतापूर्वक समाप्त!`);
         }
 
-        statusField.innerText = "✅ डेटा अपडेट हो गया है।";
+        statusField.innerText = "✅ डेटा परमानेंट मेमोरी में सुरक्षित सहेज लिया गया है।";
+        setupAttendancePanel(matchedUser);
         buildDynamicUI(); 
     }
 
-    function downloadMonthlyCSVReport() {
-        if(rawDataList.length === 0) {
-            alert("डाउनलोड करने के लिए कोई डेटा उपलब्ध नहीं है!");
-            return;
-        }
-
-        let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += "Name,Rank,Police Station,Force Type,Current Status,Duty Post,Join Time (IST),Leave Time (IST),Join GPS,Leave GPS,Attendance Summary (P|A|Hrs)\n";
-        
-        rawDataList.forEach(p => {
-            let row = [
-                `"${p.name}"`,
-                `"${p.rank}"`,
-                `"${p.ps_name}"`,
-                `"${p.force_type}"`,
-                `"${p.status}"`,
-                `"${p.duty_post}"`,
-                `"${p.in_time}"`,
-                `"${p.out_time}"`,
-                `"${p.in_gps}"`,
-                `"${p.out_gps}"`,
-                `"${p.summary}"`
-            ].join(",");
-            csvContent += row + "\n";
-        });
-        
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        
-        let fileDate = new Date().toLocaleDateString().replace(/\//g, "-");
-        link.setAttribute("download", `Police_Monthly_Report_${fileDate}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    // 📄 🎯 पीडीएफ/प्रिंट रिपोर्ट जनरेट करने का फुलप्रूफ फंक्शन
+    function downloadPDFReport() {
+        // प्रिंट कमांड देते ही ब्राउज़र सीधे PDF का ऑप्शन खोल देगा
+        window.print();
     }
 
     function buildDynamicUI() {
@@ -484,6 +535,11 @@
 
         rawDataList.forEach(obj => {
             if(!obj.type) return;
+
+            // सुरक्षा फ़िल्टर: सामान्य पुलिसकर्मी सिर्फ अपने थाने का डेटा देखेगा
+            if (!isMasterUser && obj.type === "police_stations" && obj.ps_name !== userAssignedPS) {
+                return; 
+            }
 
             if (obj.type === "police_stations") {
                 let forceKey = obj.force_type.toLowerCase().trim();
@@ -516,7 +572,12 @@
         contentArea.innerHTML = "";
 
         createTab("📂 DIRECTORY", "directory", true);
-        Object.keys(shopData).forEach(key => createTab(shopData[key].title, key, false));
+        
+        Object.keys(shopData).forEach(key => {
+            if (isMasterUser || shopData[key].partners.length > 0) {
+                createTab(shopData[key].title, key, false);
+            }
+        });
 
         const dirSection = document.createElement('div');
         dirSection.id = 'directory';
@@ -591,7 +652,8 @@
         if (statusClean === 'duty' || statusClean === 'on-duty') {
             trackingDetails = `
                 <p style="color:#ff6600; font-weight:bold;">📍 <b>Duty Post:</b> ${p.duty_post}</p>
-                <p style="font-size:12px;">🧭 <b>In GPS:</b> ${p.in_gps} | 🕒 ${p.in_time}</p>
+                <p style="font-size:12px;">🧭 <b>In GPS:</b> ${p.in_gps}</p>
+                <p style="font-size:12px; color:#2c3e50;">🕒 <b>Joined At:</b> ${p.in_time}</p>
             `;
         }
 
@@ -611,6 +673,11 @@
                     <a href="https://wa.me/${p.whatsapp}" class="action-btn">💬 WHATSAPP</a>
                 </div>
             </div>`;
+    }
+
+    function logout() {
+        localStorage.clear(); // पूरा स्थानीय डेटा साफ़ करें
+        location.reload();
     }
 
     function toggleNightMode() {
