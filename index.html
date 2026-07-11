@@ -9,10 +9,10 @@
         
         :root { 
             --police-blue: #FF6600;   
-            --light-green: #FF7700;   
-            --green-shadow: #cc4400;  
-            --dark-bg: #2ecc71; /* 🎯 फोटो वाला नया बैकग्राउंड कलर */
-            --white-bg: #2ecc71; /* 🎯 पूरे मुख्य बॉडी का बैकग्राउंड कलर */
+            --light-green: #2ecc71;   /* 🎯 फोटो वाला नया हरा रंग बटन्स के लिए */
+            --green-shadow: #27ae60;  /* 🎯 हरे रंग की गहरी शैडो */
+            --dark-bg: #1a1a1a; 
+            --white-bg: #ffffff; 
             --text-color: #000000;
             --card-text-mute: #555555; 
             --card-bg: #ffffff;
@@ -86,8 +86,8 @@
         
         .download-report-btn {
             width: 85%; padding: 12px; font-size: 14px; font-weight: 900;
-            background-color: #009432; color: white; border: none; border-radius: 50px; cursor: pointer;
-            box-shadow: 0 4px 0 #006221; text-transform: uppercase; display: inline-block;
+            background-color: var(--light-green); color: white; border: none; border-radius: 50px; cursor: pointer;
+            box-shadow: 0 4px 0 var(--green-shadow); text-transform: uppercase; display: inline-block;
         }
 
         .modal {
@@ -127,6 +127,7 @@
         .section { display: none; }
         .section.active { display: block; }
         
+        /* 🎯 लिस्ट कार्ड का बॉर्डर हरे रंग में बदला गया */
         .list-card { background: var(--card-bg); padding: 20px; border-radius: 20px; border: 5px solid var(--light-green); margin-bottom: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); color: var(--text-color); position: relative; }
         .list-card p { color: var(--card-text-mute); margin: 8px 0; }
         .list-card p b { color: var(--text-color); }
@@ -136,20 +137,21 @@
         .status-badge.off { background-color: var(--status-off); }
         .status-badge.absent { background-color: var(--status-absent); }
 
+        /* 🎯 थाने (Police Station) का बटन अब नॉर्मल (या बैकग्राउंड थीम जैसा) रहेगा और उसका बॉर्डर हरा होगा */
         .ps-header {
-            background-color: var(--police-blue); color: #ffffff; padding: 15px;
+            background-color: var(--white-bg); color: var(--text-color); padding: 15px;
             margin-bottom: 10px; border-radius: 15px; cursor: pointer; font-weight: 900;
-            display: flex; justify-content: space-between; align-items: center; border: 2px solid var(--light-green);
+            display: flex; justify-content: space-between; align-items: center; border: 3px solid var(--light-green);
         }
         .ps-content { display: none; padding-top: 10px; }
         .ps-content.open { display: block; }
 
         .btn-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; margin-top: 15px; }
-        .action-btn { padding: 12px 5px; text-decoration: none; color: #fff; border-radius: 50px; text-align: center; font-weight: 900; background-color: var(--light-green); border: none; font-size: 11px; }
+        .action-btn { padding: 12px 5px; text-decoration: none; color: #fff; border-radius: 50px; text-align: center; font-weight: 900; background-color: var(--light-green); border: none; font-size: 11px; box-shadow: 0 3px 0 var(--green-shadow); }
         
         .zoom-controls { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 4000; }
         .zoom-btn { width: 50px; height: 50px; border-radius: 50%; background-color: var(--light-green); border: 3px solid var(--green-shadow); font-size: 24px; font-weight: 900; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .home-btn { background-color: var(--btn-blue); border-color: #9a1f1f; color: white; }
+        .home-btn { background-color: var(--btn-blue); border-color: #9a1f1f; color: white; box-shadow: 0 4px 0 #9a1f1f; }
     </style>
 </head>
 <body>
