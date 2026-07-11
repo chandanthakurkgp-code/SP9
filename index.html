@@ -34,13 +34,12 @@
             color: #ffffff !important;
             background-color: #333333 !important;
         }
-        /* 🎯 नाइट मोड में अटेंडेंस रिकॉर्ड के अंदर Hrs और पूरे टेक्स्ट को साफ़ सफेद दिखाने का फिक्स */
         body.night-mode .list-card p[style*="background"] {
             background: #2c3e50 !important;
             color: #ffffff !important;
         }
         body.night-mode .list-card p[style*="background"] b {
-            color: #2ecc71 !important; /* ऑन नाइट मोड में Hrs का लेबल चमकदार हरा दिखेगा */
+            color: #2ecc71 !important;
         }
         
         body { 
@@ -246,7 +245,8 @@
 </div>
 
 <script>
-    const GOOGLE_SHEET_ID = "1dQW0F83Sn9hCOVRSkIvtReOu31oh9tM0dF6cSNfyl0"; 
+    /* 🎯 फिक्स: यहाँ शीट आईडी लिंक को 100% सही स्पेलिंग 'COqVRSk...' के साथ री-स्टोर कर दिया गया है */
+    const GOOGLE_SHEET_ID = "1dQW0F83Sn9hCOqVRSkIvtReOu31oh9tM0dF6cSNfyl0"; 
 
     let rawDataList = []; 
     let activeDutyUser = null; 
@@ -431,7 +431,7 @@
             let postInput = document.getElementById('dutyPostName').value.trim();
             
             if (!nameInput || !postInput) {
-                alert("कृपया अपना नामและ ड्यूटी स्थान दोनों भरें!");
+                alert("कृपया अपना नाम और ड्यूटी स्थान दोनों भरें!");
                 statusField.innerText = "";
                 return;
             }
