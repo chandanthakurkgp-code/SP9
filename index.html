@@ -34,6 +34,14 @@
             color: #ffffff !important;
             background-color: #333333 !important;
         }
+        /* 🎯 नाइट मोड में अटेंडेंस रिकॉर्ड के अंदर Hrs और पूरे टेक्स्ट को साफ़ सफेद दिखाने का फिक्स */
+        body.night-mode .list-card p[style*="background"] {
+            background: #2c3e50 !important;
+            color: #ffffff !important;
+        }
+        body.night-mode .list-card p[style*="background"] b {
+            color: #2ecc71 !important; /* ऑन नाइट मोड में Hrs का लेबल चमकदार हरा दिखेगा */
+        }
         
         body { 
             font-family: 'Segoe UI', Arial, sans-serif; 
@@ -94,7 +102,6 @@
             box-shadow: 0 4px 0 var(--green-shadow); text-transform: uppercase; display: inline-block;
         }
 
-        /* 🎯 लाइव समय, दिन और वेदर का स्टाइल विजेट */
         .live-info-widget {
             background: rgba(46, 204, 113, 0.15);
             border: 2px dashed var(--light-green);
@@ -200,7 +207,7 @@
         
         <button class="download-report-btn" onclick="downloadMonthlyCSVReport()">📊 DOWNLOAD MONTHLY REPORT</button>
         
-        <!-- 🎯 लाइव समय, दिन और वेदर विजेट ब्लॉक -->
+        <!-- लाइव समय, दिन और वेदर विजेट ब्लॉक -->
         <div class="live-info-widget" id="liveInfoWidget">
             📅 दिन: <span id="liveDay">-</span> | ⏱️ समय: <span id="liveClock">-</span> | 🌦️ मौसम: <span id="liveWeather">-</span>
         </div>
@@ -239,7 +246,7 @@
 </div>
 
 <script>
-    const GOOGLE_SHEET_ID = "1dQW0F83Sn9hCOqVRSkIvtReOu31oh9tM0dF6cSNfyl0"; 
+    const GOOGLE_SHEET_ID = "1dQW0F83Sn9hCOVRSkIvtReOu31oh9tM0dF6cSNfyl0"; 
 
     let rawDataList = []; 
     let activeDutyUser = null; 
@@ -275,27 +282,21 @@
             document.getElementById('activeDutyStatus').innerText = `✅ आप वर्तमान में "${savedActiveUser}" के नाम से ऑन-ड्यूटी हैं।`;
         }
 
-        // 🎯 लाइव क्लॉक, दिन और स्मार्ट वेदर सिस्टम चालू करें
         startLiveWidgetClock();
     };
 
-    // 🕒 Live Widget Clock Logic
     function startLiveWidgetClock() {
         const daysHindi = ["रविवार (Sunday)", "सोमवार (Monday)", "मंगलवार (Tuesday)", "बुधवार (Wednesday)", "गुरुवार (Thursday)", "शुक्रवार (Friday)", "शनिवार (Saturday)"];
         
         function updateWidget() {
             let now = new Date();
-            
-            // 1. लाइव क्लॉक (HH:MM:SS AM/PM)
             let timeOptions = { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
             document.getElementById('liveClock').innerText = now.toLocaleTimeString('en-US', timeOptions);
             
-            // 2. लाइव दिन और तारीख (DD/MM/YYYY)
             let dateOptions = { timeZone: 'Asia/Kolkata', day: '2-digit', month: '2-digit', year: 'numeric' };
             let dateStr = now.toLocaleDateString('en-GB', dateOptions);
             document.getElementById('liveDay').innerText = `${daysHindi[now.getDay()]} [${dateStr}]`;
             
-            // 3. लाइव ऑटो-वेदर सिमुलेशन (समय चक्र के अनुसार बिल्कुल सटीक वेदर)
             let hrs = now.getHours();
             let weatherStr = "🌡️ 31°C सामान्य";
             if (hrs >= 5 && hrs < 11) weatherStr = "🌅 28°C सुहावना सुबह";
@@ -308,7 +309,7 @@
         }
         
         updateWidget();
-        setInterval(updateWidget, 1000); // हर एक सेकंड में अपडेट होगा
+        setInterval(updateWidget, 1000);
     }
 
     function getIndianISTDateTime() {
@@ -430,7 +431,7 @@
             let postInput = document.getElementById('dutyPostName').value.trim();
             
             if (!nameInput || !postInput) {
-                alert("कृपया अपना नाम और ड्यूटी स्थान दोनों भरें!");
+                alert("कृपया अपना नामและ ड्यूटी स्थान दोनों भरें!");
                 statusField.innerText = "";
                 return;
             }
