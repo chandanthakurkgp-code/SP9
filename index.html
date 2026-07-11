@@ -9,8 +9,8 @@
         
         :root { 
             --police-blue: #FF6600;   
-            --light-green: #2ecc71;   /* 🎯 फोटो वाला नया हरा रंग बटन्स के लिए */
-            --green-shadow: #27ae60;  /* 🎯 हरे रंग की गहरी शैडो */
+            --light-green: #2ecc71;   
+            --green-shadow: #27ae60;  
             --dark-bg: #1a1a1a; 
             --white-bg: #ffffff; 
             --text-color: #000000;
@@ -23,12 +23,17 @@
             --status-absent: #c23616;
         }
 
+        /* 🎯 नाइट मोड में इनपुट बॉक्स के अंदर टाइपिंग टेक्स्ट को सफेद करने का फिक्स */
         body.night-mode {
             --white-bg: #121212;
             --text-color: #ffffff;
             --card-text-mute: #dddddd; 
             --card-bg: #1e1e1e;
             --dark-bg: #000000;
+        }
+        body.night-mode .post-input {
+            color: #ffffff !important;
+            background-color: #333333 !important;
         }
         
         body { 
@@ -127,7 +132,6 @@
         .section { display: none; }
         .section.active { display: block; }
         
-        /* 🎯 लिस्ट कार्ड का बॉर्डर हरे रंग में बदला गया */
         .list-card { background: var(--card-bg); padding: 20px; border-radius: 20px; border: 5px solid var(--light-green); margin-bottom: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); color: var(--text-color); position: relative; }
         .list-card p { color: var(--card-text-mute); margin: 8px 0; }
         .list-card p b { color: var(--text-color); }
@@ -137,11 +141,10 @@
         .status-badge.off { background-color: var(--status-off); }
         .status-badge.absent { background-color: var(--status-absent); }
 
-        /* 🎯 थाने (Police Station) का बटन अब नॉर्मल (या बैकग्राउंड थीम जैसा) रहेगा और उसका बॉर्डर हरा होगा */
         .ps-header {
             background-color: var(--white-bg); color: var(--text-color); padding: 15px;
             margin-bottom: 10px; border-radius: 15px; cursor: pointer; font-weight: 900;
-            display: flex; justify-content: space-between; align-items: center; border: 3px solid var(--light-green);
+            display: flex; justify-content: space-between; align-items: center; border: 2px solid var(--light-green);
         }
         .ps-content { display: none; padding-top: 10px; }
         .ps-content.open { display: block; }
