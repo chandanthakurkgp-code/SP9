@@ -11,8 +11,8 @@
             --police-blue: #FF6600;   
             --light-green: #FF7700;   
             --green-shadow: #cc4400;  
-            --dark-bg: #1a1a1a; 
-            --white-bg: #ffffff; 
+            --dark-bg: #2ecc71; /* 🎯 फोटो वाला नया बैकग्राउंड कलर */
+            --white-bg: #2ecc71; /* 🎯 पूरे मुख्य बॉडी का बैकग्राउंड कलर */
             --text-color: #000000;
             --card-text-mute: #555555; 
             --card-bg: #ffffff;
@@ -74,7 +74,7 @@
             width: 85%; padding: 12px; border-radius: 50px;
             border: 2px solid var(--police-blue); font-size: 15px;
             text-align: center; margin-bottom: 12px; outline: none; color: var(--text-color);
-            background: var(--white-bg);
+            background: #ffffff;
         }
         .duty-master-btn {
             width: 85%; padding: 14px; font-size: 16px; font-weight: 900;
@@ -105,7 +105,7 @@
         }
 
         .search-container { background: var(--dark-bg); padding: 0 15px 15px 15px; border-bottom: 3px solid var(--light-green); }
-        .global-search-bar { width: 100%; max-width: 600px; padding: 15px; border-radius: 50px; border: 3px solid var(--light-green); font-size: 18px; display: block; margin: 0 auto; outline: none; }
+        .global-search-bar { width: 100%; max-width: 600px; padding: 15px; border-radius: 50px; border: 3px solid var(--light-green); font-size: 18px; display: block; margin: 0 auto; outline: none; background: #ffffff; }
 
         .nav-container { 
             background-color: var(--dark-bg); padding: 15px 0; position: sticky; top: 0; z-index: 1000; 
@@ -137,7 +137,7 @@
         .status-badge.absent { background-color: var(--status-absent); }
 
         .ps-header {
-            background-color: var(--dark-bg); color: #ffffff; padding: 15px;
+            background-color: var(--police-blue); color: #ffffff; padding: 15px;
             margin-bottom: 10px; border-radius: 15px; cursor: pointer; font-weight: 900;
             display: flex; justify-content: space-between; align-items: center; border: 2px solid var(--light-green);
         }
@@ -250,7 +250,7 @@
             activeDutyUser = savedActiveUser;
             document.getElementById('dutyFormArea').style.display = "none";
             document.getElementById('leaveFormArea').style.display = "block";
-            document.getElementById('activeDutyStatus').innerText = `✅ आप वर्तमान में "${activeDutyUser}" के नाम से ऑन-ड्यूटी हैं।`;
+            document.getElementById('activeDutyStatus').innerText = `✅ आप वर्तमान में "${savedActiveUser}" के नाम से ऑन-ड्यूटी हैं।`;
         }
     };
 
@@ -359,7 +359,7 @@
     function executeAttendanceLogic(actionType, gpsOutput) {
         const statusField = document.getElementById('gpsStatus');
         let currentDateTime = getIndianISTDateTime();
-        let currentDateOnly = currentDateTime.split("|")[0].trim(); // Extract DD/MM/YYYY
+        let currentDateOnly = currentDateTime.split("|")[0].trim(); 
 
         if (actionType === 'join') {
             let nameInput = document.getElementById('dutyUserName').value.trim();
@@ -379,7 +379,6 @@
                 return;
             }
 
-            // 🎯 सुधार 2: दिन में केवल 1 बार ड्यूटी जॉइन करने की कड़ाई
             let uName = matchedUser.name;
             let lastJoinDate = localStorage.getItem(`lastJoinDate_${uName}`);
             if (lastJoinDate === currentDateOnly) {
@@ -399,13 +398,12 @@
             let hrsCount = parseInt(parts[2].split(':')[1]);
             matchedUser.summary = `P:${pCount} | A:${aCount} | Hrs:${hrsCount}`;
 
-            // लोकल स्टोरेज में लॉक करना
             localStorage.setItem(`status_${uName}`, "On-Duty");
             localStorage.setItem(`post_${uName}`, postInput);
             localStorage.setItem(`inTime_${uName}`, currentDateTime);
             localStorage.setItem(`inGps_${uName}`, gpsOutput);
             localStorage.setItem(`summary_${uName}`, matchedUser.summary);
-            localStorage.setItem(`lastJoinDate_${uName}`, currentDateOnly); // तारीख लॉक हुई
+            localStorage.setItem(`lastJoinDate_${uName}`, currentDateOnly); 
 
             activeDutyUser = matchedUser.name;
             localStorage.setItem('activeDutyUser', matchedUser.name);
@@ -429,7 +427,6 @@
                     } catch(e) { hrsWorked = 8; }
                 }
                 
-                // 🎯 सुधार 1: 'rawDataList' ऑब्जेक्ट में भी तुरंत 'Off-Duty' अपडेट करें
                 matchedUser.status = "Off-Duty";
                 matchedUser.out_time = currentDateTime;
                 matchedUser.out_gps = gpsOutput;
@@ -440,7 +437,6 @@
                 let hrsCount = parseInt(parts[2].split(':')[1]) + hrsWorked;
                 matchedUser.summary = `P:${pCount} | A:${aCount} | Hrs:${hrsCount}`;
 
-                // लोकल स्टोरेज में लॉक करना
                 let uName = matchedUser.name;
                 localStorage.setItem(`status_${uName}`, "Off-Duty");
                 localStorage.setItem(`outTime_${uName}`, currentDateTime);
