@@ -62,7 +62,6 @@
         .links-btn.blue { background-color: var(--btn-blue); box-shadow: 0 4px 0 #9a1f1f; color: white; }
         .links-btn.orange { background-color: var(--btn-orange); box-shadow: 0 4px 0 #cc7a29; color: white; }
 
-        /* अटेंडेंस डैशबोर्ड */
         .attendance-panel {
             background: var(--dark-bg); padding: 20px 15px; text-align: center;
             border-bottom: 3px solid var(--light-green);
@@ -85,7 +84,6 @@
         .duty-master-btn.join { background-color: #4cd137; box-shadow: 0 4px 0 #389526; }
         .duty-master-btn.leave { background-color: #c23616; box-shadow: 0 4px 0 #8c260f; }
         
-        /* 📊 एक्सेल डाउनलोड बटन स्टाइल */
         .download-report-btn {
             width: 85%; padding: 12px; font-size: 14px; font-weight: 900;
             background-color: #009432; color: white; border: none; border-radius: 50px; cursor: pointer;
@@ -183,7 +181,6 @@
             <button class="duty-master-btn leave" onclick="handleDutyAction('leave')">🛑 LEAVE DUTY (ड्यूटी समाप्त)</button>
         </div>
         
-        <!-- 📊 पूरे महीने की रिपोर्ट डाउनलोड करने का मास्टर बटन -->
         <button class="download-report-btn" onclick="downloadMonthlyCSVReport()">📊 DOWNLOAD MONTHLY REPORT</button>
         
         <p id="gpsStatus" style="font-size:12px; color:#7f8c8d; margin-top:10px; margin-bottom:0; font-weight:bold;"></p>
@@ -257,7 +254,6 @@
         }
     };
 
-    // 🕒 सटीक भारतीय समय (IST) प्राप्त करने का फंक्शन
     function getIndianISTDateTime() {
         let options = {
             timeZone: 'Asia/Kolkata',
@@ -337,104 +333,115 @@
         .catch(err => console.error("डेटा लोड करने में समस्या आई।", err));
     }
 
+    // ⚡ सुरक्षा फॉलबैक (Fail-Safe GPS Logic) के साथ सुधरा हुआ अटेंडेंस ट्रैकर
     function handleDutyAction(actionType) {
         const statusField = document.getElementById('gpsStatus');
         statusField.innerText = "🌐 कृपया प्रतीक्षा करें, आपका सटीक GPS लोकेशन कैप्चर किया जा रहा है...";
 
+        // अगर ब्राउज़र सपोर्ट ही नहीं करता
         if (!navigator.geolocation) {
-            alert("आपके मोबाइल में GPS काम नहीं कर रहा है।");
+            executeAttendanceLogic(actionType, "GPS Not Supported");
             return;
         }
 
+        // 7 सेकंड के अंदर GPS कनेक्ट करने की कोशिश करेगा, नहीं तो फॉलबैक मोड ऑन कर देगा
         navigator.geolocation.getCurrentPosition((position) => {
             let lat = position.coords.latitude.toFixed(6);
             let lon = position.coords.longitude.toFixed(6);
-            let gpsCoords = `"${lat}, ${lon}"`;
-            let currentDateTime = getIndianISTDateTime(); // 🇮🇳 सटीक भारतीय समय का उपयोग
-
-            if (actionType === 'join') {
-                let nameInput = document.getElementById('dutyUserName').value.trim();
-                let postInput = document.getElementById('dutyPostName').value.trim();
-                
-                if (!nameInput || !postInput) {
-                    alert("कृपया अपना नाम and ड्यूटी स्थान दोनों भरें!");
-                    statusField.innerText = "";
-                    return;
-                }
-
-                let matchedUser = rawDataList.find(u => u.name.toLowerCase().includes(nameInput.toLowerCase()));
-
-                if (!matchedUser) {
-                    alert("⚠️ दर्ज किया गया नाम डेटाबेस रिकॉर्ड में नहीं मिला।");
-                    statusField.innerText = "";
-                    return;
-                }
-
-                matchedUser.status = "On-Duty";
-                matchedUser.duty_post = postInput;
-                matchedUser.in_time = currentDateTime;
-                matchedUser.in_gps = gpsCoords.replace(/"/g, "");
-
-                let parts = matchedUser.summary.split('|').map(p => p.trim());
-                let pCount = parseInt(parts[0].split(':')[1]) + 1;
-                let aCount = parseInt(parts[1].split(':')[1]);
-                let hrsCount = parseInt(parts[2].split(':')[1]);
-                matchedUser.summary = `P:${pCount} | A:${aCount} | Hrs:${hrsCount}`;
-
-                activeDutyUser = matchedUser.name;
-                localStorage.setItem('activeDutyUser', matchedUser.name);
-                localStorage.setItem('activeDutyPost', postInput);
-                localStorage.setItem('activeDutyInTime', currentDateTime);
-                localStorage.setItem('activeDutyInGps', matchedUser.in_gps);
-
-                document.getElementById('dutyFormArea').style.display = "none";
-                document.getElementById('leaveFormArea').style.display = "block";
-                document.getElementById('activeDutyStatus').innerText = `✅ आप वर्तमान में "${matchedUser.name}" के नाम से ऑन-ड्यूटी हैं।`;
-
-                alert(`🚨 जय हिन्द, ड्यूटी सफलतापूर्वक जॉइन की गई!\n🕒 समय (IST): ${currentDateTime}`);
-            } else if (actionType === 'leave') {
-                let matchedUser = rawDataList.find(u => u.name.toLowerCase() === activeDutyUser.toLowerCase());
-
-                if (matchedUser) {
-                    let hrsWorked = 8; 
-                    if(matchedUser.in_time) {
-                        let diffMs = Math.abs(new Date(currentDateTime) - new Date(matchedUser.in_time));
-                        hrsWorked = Math.round(diffMs / (1000 * 60 * 60)) || 1;
-                    }
-                    matchedUser.status = "Off-Duty";
-                    matchedUser.out_time = currentDateTime;
-                    matchedUser.out_gps = gpsCoords.replace(/"/g, "");
-
-                    let parts = matchedUser.summary.split('|').map(p => p.trim());
-                    let pCount = parseInt(parts[0].split(':')[1]);
-                    let aCount = parseInt(parts[1].split(':')[1]);
-                    let hrsCount = parseInt(parts[2].split(':')[1]) + hrsWorked;
-                    matchedUser.summary = `P:${pCount} | A:${aCount} | Hrs:${hrsCount}`;
-                }
-
-                localStorage.removeItem('activeDutyUser');
-                localStorage.removeItem('activeDutyPost');
-                localStorage.removeItem('activeDutyInTime');
-                localStorage.removeItem('activeDutyInGps');
-                activeDutyUser = null;
-
-                document.getElementById('dutyFormArea').style.display = "block";
-                document.getElementById('leaveFormArea').style.display = "none";
-                document.getElementById('dutyUserName').value = "";
-                document.getElementById('dutyPostName').value = "";
-
-                alert(`🛑 ड्यूटी सफलतापूर्वक समाप्त!`);
-            }
-
-            statusField.innerText = "✅ डेटा भारतीय समय अनुसार अपडेट हो गया है।";
-            buildDynamicUI(); 
+            let gpsCoords = `${lat}; ${lon}`;
+            executeAttendanceLogic(actionType, gpsCoords);
         }, (error) => {
-            alert("GPS लोकेशन नहीं मिल पाई।");
-            statusField.innerText = "❌ GPS लोकेशन एरर।";
-        }, { enableHighAccuracy: true, timeout: 10000 });
+            // 🎯 स्मार्ट बैकअप: लोकेशन एरर या डिनाइड होने पर भी हाजिरी बंद नहीं होगी, सीधे सबमिट होगी!
+            console.log("GPS कनेक्ट नहीं हो सका, बैकअप मोड एक्टिवेटेड। एरर कोड:", error.code);
+            executeAttendanceLogic(actionType, "GPS Required/Off");
+        }, { enableHighAccuracy: true, timeout: 7000 }); 
     }
 
-    // 📊 मास्टर एक्सेल/सीएसवी रिपोर्ट डाउनलोड करने का लॉजिक (Lat-Long, Time, Absent, Present सब एक साथ)
+    // कोर अटेंडेंस प्रोसेसिंग फंक्शन
+    function executeAttendanceLogic(actionType, gpsOutput) {
+        const statusField = document.getElementById('gpsStatus');
+        let currentDateTime = getIndianISTDateTime();
+
+        if (actionType === 'join') {
+            let nameInput = document.getElementById('dutyUserName').value.trim();
+            let postInput = document.getElementById('dutyPostName').value.trim();
+            
+            if (!nameInput || !postInput) {
+                alert("कृपया अपना नाम और ड्यूटी स्थान दोनों भरें!");
+                statusField.innerText = "";
+                return;
+            }
+
+            let matchedUser = rawDataList.find(u => u.name.toLowerCase().includes(nameInput.toLowerCase()));
+
+            if (!matchedUser) {
+                alert("⚠️ दर्ज किया गया नाम डेटाबेस रिकॉर्ड में नहीं मिला।");
+                statusField.innerText = "";
+                return;
+            }
+
+            matchedUser.status = "On-Duty";
+            matchedUser.duty_post = postInput;
+            matchedUser.in_time = currentDateTime;
+            matchedUser.in_gps = gpsOutput;
+
+            let parts = matchedUser.summary.split('|').map(p => p.trim());
+            let pCount = parseInt(parts[0].split(':')[1]) + 1;
+            let aCount = parseInt(parts[1].split(':')[1]);
+            let hrsCount = parseInt(parts[2].split(':')[1]);
+            matchedUser.summary = `P:${pCount} | A:${aCount} | Hrs:${hrsCount}`;
+
+            activeDutyUser = matchedUser.name;
+            localStorage.setItem('activeDutyUser', matchedUser.name);
+            localStorage.setItem('activeDutyPost', postInput);
+            localStorage.setItem('activeDutyInTime', currentDateTime);
+            localStorage.setItem('activeDutyInGps', matchedUser.in_gps);
+
+            document.getElementById('dutyFormArea').style.display = "none";
+            document.getElementById('leaveFormArea').style.display = "block";
+            document.getElementById('activeDutyStatus').innerText = `✅ आप वर्तमान में "${matchedUser.name}" के नाम से ऑन-ड्यूटी हैं।`;
+
+            alert(`🚨 जय हिन्द, ड्यूटी सफलतापूर्वक जॉइन की गई!\n🕒 समय (IST): ${currentDateTime}\n🧭 GPS: ${gpsOutput}`);
+        } else if (actionType === 'leave') {
+            let matchedUser = rawDataList.find(u => u.name.toLowerCase() === activeDutyUser.toLowerCase());
+
+            if (matchedUser) {
+                let hrsWorked = 8; 
+                if(matchedUser.in_time) {
+                    try {
+                        let diffMs = Math.abs(new Date(currentDateTime) - new Date(matchedUser.in_time));
+                        hrsWorked = Math.round(diffMs / (1000 * 60 * 60)) || 1;
+                    } catch(e) { hrsWorked = 8; }
+                }
+                matchedUser.status = "Off-Duty";
+                matchedUser.out_time = currentDateTime;
+                matchedUser.out_gps = gpsOutput;
+
+                let parts = matchedUser.summary.split('|').map(p => p.trim());
+                let pCount = parseInt(parts[0].split(':')[1]);
+                let aCount = parseInt(parts[1].split(':')[1]);
+                let hrsCount = parseInt(parts[2].split(':')[1]) + hrsWorked;
+                matchedUser.summary = `P:${pCount} | A:${aCount} | Hrs:${hrsCount}`;
+            }
+
+            localStorage.removeItem('activeDutyUser');
+            localStorage.removeItem('activeDutyPost');
+            localStorage.removeItem('activeDutyInTime');
+            localStorage.removeItem('activeDutyInGps');
+            activeDutyUser = null;
+
+            document.getElementById('dutyFormArea').style.display = "block";
+            document.getElementById('leaveFormArea').style.display = "none";
+            document.getElementById('dutyUserName').value = "";
+            document.getElementById('dutyPostName').value = "";
+
+            alert(`🛑 ड्यूटी सफलतापूर्वक समाप्त!\n🕒 समय (IST): ${currentDateTime}`);
+        }
+
+        statusField.innerText = "✅ डेटा अपडेट हो गया है।";
+        buildDynamicUI(); 
+    }
+
     function downloadMonthlyCSVReport() {
         if(rawDataList.length === 0) {
             alert("डाउनलोड करने के लिए कोई डेटा उपलब्ध नहीं है!");
@@ -442,11 +449,8 @@
         }
 
         let csvContent = "data:text/csv;charset=utf-8,";
-        
-        // एक्सेल हेडर लाइन
         csvContent += "Name,Rank,Police Station,Force Type,Current Status,Duty Post,Join Time (IST),Leave Time (IST),Join GPS,Leave GPS,Attendance Summary (P|A|Hrs)\n";
         
-        // हर पुलिसकर्मी का डेटा रो-वाई-रो जोड़ना
         rawDataList.forEach(p => {
             let row = [
                 `"${p.name}"`,
@@ -464,7 +468,6 @@
             csvContent += row + "\n";
         });
         
-        // डाउनलोड लिंक ट्रिगर करना
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
@@ -472,8 +475,7 @@
         let fileDate = new Date().toLocaleDateString().replace(/\//g, "-");
         link.setAttribute("download", `Police_Monthly_Report_${fileDate}.csv`);
         document.body.appendChild(link);
-        
-        link.click(); // डाउनलोड शुरू
+        link.click();
         document.body.removeChild(link);
     }
 
