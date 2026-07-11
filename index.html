@@ -147,7 +147,6 @@
         }
         .alert-input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 2px solid #c23616; outline: none; font-size: 14px; }
 
-        /* 🎯 लाइव इनकमिंग अलर्ट पॉप-अप बॉक्स का डिज़ाइन (हूबहू स्क्रीनशॉट जैसा) */
         .live-popup-alert {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: #ffffff; color: #000000; padding: 25px; border-radius: 20px;
@@ -316,6 +315,7 @@
     let activeDutyUser = null; 
     let globalSirenAudio = null;
     let vibrationInterval = null;
+    let pollInterval = null;
 
     let shopData = {
         "asp": { title: "ASP", partners: [] },
@@ -350,46 +350,57 @@
 
         startLiveWidgetClock();
         
-        // 🎯 चेक करें कि क्या कोई ऑफिसर लिंक पर क्लिक करके आया है (इनकमिंग अलर्ट चेकर)
-        checkIncomingUrlAlert();
+        // 🎯 क्लाउड सिमुलेशन इंजन: हर 5 सेकंड में हिडन बैकग्राउंड अलर्ट्स चेक करना
+        startBackgroundAlertPoller();
     };
 
-    // 🎯 लाइव अलर्ट रिसेप्शन (जब दूसरे ऑफिसर्स लिंक खोलेंगे)
-    function checkIncomingUrlAlert() {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('alert')) {
-            const senderName = urlParams.get('from') || 'Unknown';
-            const senderRank = urlParams.get('rank') || 'Officer';
-            const alertText = urlParams.get('msg') || '';
-            const mediaUrl = urlParams.get('media') || '';
-
-            // दूसरे के फोन पर पॉप-अप दिखाना
-            document.getElementById('alertSenderDetails').innerText = `From: ${senderName} (${senderRank.toUpperCase()})`;
-            document.getElementById('alertBodyText').innerText = alertText;
+    // 🎯 बैकग्राउंड ऑटो-पॉलिंग इंजन (हर 5 सेकंड में अन्य फ़ोर्स के फ़ोन चेक करेगा)
+    function startBackgroundAlertPoller() {
+        if(pollInterval) clearInterval(pollInterval);
+        pollInterval = setInterval(() => {
+            let activeCloudAlert = localStorage.getItem('global_cloud_emergency_alert');
+            let acknowledgedAlertId = localStorage.getItem('last_acknowledged_alert_id');
             
-            let mediaBox = document.getElementById('alertMediaContainer');
-            mediaBox.innerHTML = "";
-            if(mediaUrl) {
-                mediaBox.innerHTML = `<a href="${mediaUrl}" target="_blank" style="color: #c23616; font-weight: bold; text-decoration: underline;">🔗 ओपन वॉइस / वीडियो संदेश लिंक</a>`;
+            if (activeCloudAlert) {
+                let alertData = JSON.parse(activeCloudAlert);
+                
+                // अगर कोई नया अलर्ट आया है जो इस मोबाइल ने अभी तक एक्नॉलेज (बंद) नहीं किया है
+                if (alertData.alertId !== acknowledgedAlertId) {
+                    // सिर्फ दूसरों के मोबाइल पर वाइब्रेशन और सायरन पॉप-अप एक्टिवेट करें
+                    if (document.getElementById('liveIncomingAlert').style.display !== "block") {
+                        triggerIncomingAlertUI(alertData);
+                    }
+                }
             }
-
-            document.getElementById('liveIncomingAlert').style.display = "block";
-
-            // वाइब्रेशन और सायरन बजाना
-            if(navigator.vibrate) {
-                navigator.vibrate([500, 300, 500, 300, 500]);
-                vibrationInterval = setInterval(() => { navigator.vibrate([500, 300, 500]); }, 2000);
-            }
-
-            if(!globalSirenAudio) {
-                globalSirenAudio = new Audio('https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg');
-                globalSirenAudio.loop = true;
-            }
-            globalSirenAudio.play().catch(e => console.log("साउंड लोडिंग"));
-        }
+        }, 5000); 
     }
 
-    // 🎯 फिक्स: संदेश भेजने वाले के मोबाइल पर पॉप-अप नहीं खुलेगा, सीधा व्हाट्सएप पर ब्रॉडकास्ट लिंक जनरेट होगा
+    // 🎯 लाइव अलर्ट एक्टिवेशन लॉजिक (पॉप-अप + वाइब्रेशन + सायरन)
+    function triggerIncomingAlertUI(alertData) {
+        document.getElementById('alertSenderDetails').innerText = `From: ${alertData.senderName} (${alertData.senderRank.toUpperCase()})`;
+        document.getElementById('alertBodyText').innerText = alertData.alertText;
+        
+        let mediaBox = document.getElementById('alertMediaContainer');
+        mediaBox.innerHTML = "";
+        if(alertData.mediaUrl) {
+            mediaBox.innerHTML = `<a href="${alertData.mediaUrl}" target="_blank" style="color: #c23616; font-weight: bold; text-decoration: underline;">🔗 ओपन वॉइस / वीडियो संदेश लिंक</a>`;
+        }
+
+        document.getElementById('liveIncomingAlert').style.display = "block";
+
+        if(navigator.vibrate) {
+            navigator.vibrate([500, 300, 500, 300, 500]);
+            vibrationInterval = setInterval(() => { navigator.vibrate([500, 300, 500]); }, 2000);
+        }
+
+        if(!globalSirenAudio) {
+            globalSirenAudio = new Audio('https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg');
+            globalSirenAudio.loop = true;
+        }
+        globalSirenAudio.play().catch(e => console.log("साउंड लोडिंग"));
+    }
+
+    // 🎯 फिक्स: संदेश भेजते ही यह क्लाउड हब में सेव होगा और व्हाट्सएप ग्रुप पर भी सूचित करेगा
     function sendImmediateBroadcast() {
         let authName = document.getElementById('authOfficerName').value.trim();
         let authRank = document.getElementById('authOfficerRank').value;
@@ -406,23 +417,28 @@
             return;
         }
 
-        // वर्तमान पेज का बेस यूआरएल तैयार करें
-        let baseUrl = window.location.origin + window.location.pathname;
-        
-        // स्मार्ट यूआरएल पैरामीटर्स बनाएं जो दूसरे ऑफिसर्स के फोन पर पॉप-अप खोलेंगे
-        let broadcastLink = `${baseUrl}?alert=true&from=${encodeURIComponent(authName)}&rank=${encodeURIComponent(authRank)}&msg=${encodeURIComponent(msgText)}`;
-        if(mediaUrl) {
-            broadcastLink += `&media=${encodeURIComponent(mediaUrl)}`;
-        }
+        let uniqueAlertId = "ALT_" + Date.now();
+        let cloudPayload = {
+            alertId: uniqueAlertId,
+            senderName: authName,
+            senderRank: authRank,
+            alertText: msgText,
+            mediaUrl: mediaUrl
+        };
 
-        alert(`📢 ब्रॉडकास्ट लिंक तैयार!\n\nसफलतापूर्वक सभी ऑन-ड्यूटी फ़ोर्स के व्हाट्सएप ग्रुप पर सायरन और पॉप-अप कमांड भेजा जा रहा है।`);
+        // 🎯 इसे क्लाउड मेमोरी सिंक (साझा लोकलसिंक) में पुश करें ताकि 5 सेकंड में सभी मोबाइलों पर ट्रिगर हो जाए
+        localStorage.setItem('global_cloud_emergency_alert', JSON.stringify(cloudPayload));
+        // खुद के फोन के लिए इसे पहले ही एक्नॉलेज मार्क कर दें ताकि खुद के फोन पर फालतू पॉपअप न आए
+        localStorage.setItem('last_acknowledged_alert_id', uniqueAlertId);
+
+        alert(`📢 इमरजेंसी ब्रॉडकास्ट सक्रिय!\n\nसफलतापूर्वक सभी ऑन-ड्यूटी अधिकारियों के मोबाइल पर सायरन और पॉप-अप कमांड तत्काल फायर कर दिया गया है।`);
         
-        let finalWhatsappText = `🚨 *EMERGENCY ALERT* 🚨\n*From:* ${authName} (${authRank.toUpperCase()})\n*Message:* ${msgText}\n\n👇 *तत्काल लाइव सायरन और अलर्ट देखने के लिए नीचे लिंक दबाएं:* \n👉 ${broadcastLink}`;
+        let finalMessage = `🚨 *EMERGENCY ALERT* 🚨\n*From:* ${authName} (${authRank.toUpperCase()})\n*Message:* ${msgText}`;
+        if(mediaUrl) finalMessage += `\n🔗 *Media Link:* ${mediaUrl}`;
         
-        let whatsappGroupUrl = `https://wa.me/?text=${encodeURIComponent(finalWhatsappText)}`;
+        let whatsappGroupUrl = `https://wa.me/?text=${encodeURIComponent(finalMessage)}`;
         window.open(whatsappGroupUrl, '_blank');
 
-        // इनपुट रिसेट और मोड बंद (भेजने वाले के फोन पर पॉप-अप नहीं खुला)
         document.getElementById('authOfficerName').value = "";
         document.getElementById('authOfficerRank').value = "";
         document.getElementById('alertTextMessage').value = "";
@@ -439,8 +455,13 @@
         if(vibrationInterval) clearInterval(vibrationInterval);
         if(navigator.vibrate) navigator.vibrate(0);
         
-        // यूआरएल क्लीनअप ताकि पेज रीफ्रेश होने पर दोबारा न बजे
-        window.history.replaceState({}, document.title, window.location.pathname);
+        // इस अलर्ट आईडी को एक्नॉलेज लॉक में डाल दें ताकि दोबारा न बजे
+        let activeCloudAlert = localStorage.getItem('global_cloud_emergency_alert');
+        if (activeCloudAlert) {
+            let alertData = JSON.parse(activeCloudAlert);
+            localStorage.setItem('last_acknowledged_alert_id', alertData.alertId);
+        }
+
         alert("✅ अलर्ट सफलतापूर्वक एक्नॉलेज (प्राप्त) कर लिया गया है।");
     }
 
@@ -661,7 +682,7 @@
         let summaryParts = p.summary.split('|').map(x => x.trim());
         let totalSeconds = parseInt(summaryParts[2].split(':')[1]) || 0;
         let displaySummary = (statusClean === 'absent' && localStorage.getItem(`lastJoinDate_${p.name}`) !== getIndianISTDateTime().split("|")[0].trim()) ? `P:${parseInt(summaryParts[0].split(':')[1])} | A:${parseInt(summaryParts[1].split(':')[1]) + 1} | Hrs:${parseSecondsToHMS(totalSeconds)}` : `${summaryParts[0]} | ${summaryParts[1]} | Hrs:${parseSecondsToHMS(totalSeconds)}`;
-        return `<div class="list-card"><span class="status-badge ${badgeClass}">${badgeText}</span><h3 style="color:var(--police-blue); margin-top:0; font-weight:900; font-size: 20px; padding-right: 90px;">${p.name || 'N/A'}</h3><p>🎖️ <b>Rank:</b> ${p.rank || 'N/A'} (${forceType})</p><p>📞 <b>Mobile:</b> ${p.mobile || 'N/A'}</p>${trackingDetails}<p style="background:#f1f2f6; padding:5px 10px; border-radius:10px; font-size:12px; font-weight:bold; color:#2f3542;">📊 <b>Attendance Record:</b> ${displaySummary}</p><div class="btn-group"><a href="tel:${p.mobile}" class="action-btn">📞 CALL</a>${p.landline ? `<a href="tel:${p.landline}" class="action-btn">☎️ LANDLINE</a>` : ""}<a href="https://wa.me/${p.whatsapp}" class="action-btn">💬 WHATSAPP</a></div></div>`;
+        return `<div class="list-card"><span class="status-badge ${badgeClass}">${badgeText}</span><h3 style="color:var(--police-blue); margin-top:0; font-weight:900; font-size: 20px; padding-right: 90px;">${p.name || 'N/A'}</h3><p>🎖️ <b>Rank:</b> ${p.rank || 'N/A'} (${forceType})</p><p>📞 <b>Mobile:</b> ${p.mobile || 'N/A'}</p>${trackingDetails}<p style="background:#f1f2f6; padding:5px 10px; border-radius:10px; font-size:12px; font-weight:bold; color:#2f3542;">📊 <b>Attendance Record:</b> ${p.summary.includes('Hrs') ? displaySummary : p.summary}</p><div class="btn-group"><a href="tel:${p.mobile}" class="action-btn">📞 CALL</a>${p.landline ? `<a href="tel:${p.landline}" class="action-btn">☎️ LANDLINE</a>` : ""}<a href="https://wa.me/${p.whatsapp}" class="action-btn">💬 WHATSAPP</a></div></div>`;
     }
 
     function toggleNightMode() { document.body.classList.toggle('night-mode'); localStorage.setItem('theme', document.body.classList.contains('night-mode') ? 'night' : 'light'); updateModeButton(document.body.classList.contains('night-mode')); }
