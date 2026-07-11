@@ -254,14 +254,18 @@
         }
     };
 
+    // 🕒 🎯 नया टाइम और तारीख फॉर्मेट (DD/MM/YYYY और HH:MM:SS AM/PM)
     function getIndianISTDateTime() {
-        let options = {
-            timeZone: 'Asia/Kolkata',
-            year: 'numeric', month: '2-digit', day: '2-digit',
-            hour: '2-digit', minute: '2-digit', second: '2-digit',
-            hour12: true
-        };
-        return new Date().toLocaleString('en-US', options);
+        let dateObj = new Date();
+        
+        // भारतीय मानक समय (IST) कन्वर्जन विकल्प
+        let dateOptions = { timeZone: 'Asia/Kolkata', day: '2-digit', month: '2-digit', year: 'numeric' };
+        let timeOptions = { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+        
+        let dateString = dateObj.toLocaleDateString('en-GB', dateOptions); // DD/MM/YYYY फॉर्मेट देता है
+        let timeString = dateObj.toLocaleTimeString('en-US', timeOptions); // HH:MM:SS AM/PM फॉर्मेट देता है
+        
+        return `${dateString} | ${timeString}`;
     }
 
     function loadGoogleSheetDirectly() {
@@ -299,31 +303,35 @@
                 if(!lines[i].trim()) continue;
                 let cols = lines[i].split(',').map(c => c.trim().replace(/^["']|["']$/g, ""));
                 
+                let pName = nameIdx !== -1 && cols[nameIdx] ? cols[nameIdx].trim() : 'N/A';
+                
+                // 🔒 🎯 लोकल स्टोरेज (Permanent Memory) से पुराना अटेंडेंस रिकॉर्ड रिकवर करना
+                let savedStatus = localStorage.getItem(`status_${pName}`) || (statusIdx !== -1 && cols[statusIdx] ? cols[statusIdx].trim() : 'Off-Duty');
+                let savedPost = localStorage.getItem(`post_${pName}`) || (postIdx !== -1 && cols[postIdx] ? cols[postIdx].trim() : 'N/A');
+                let savedInTime = localStorage.getItem(`inTime_${pName}`) || (inTimeIdx !== -1 && cols[inTimeIdx] ? cols[inTimeIdx].trim() : '');
+                let savedOutTime = localStorage.getItem(`outTime_${pName}`) || (outTimeIdx !== -1 && cols[outTimeIdx] ? cols[outTimeIdx].trim() : '');
+                let savedInGps = localStorage.getItem(`inGps_${pName}`) || (inGpsIdx !== -1 && cols[inGpsIdx] ? cols[inGpsIdx].trim() : '');
+                let savedOutGps = localStorage.getItem(`outGps_${pName}`) || (outGpsIdx !== -1 && cols[outGpsIdx] ? cols[outGpsIdx].trim() : '');
+                let savedSummary = localStorage.getItem(`summary_${pName}`) || (summaryIdx !== -1 && cols[summaryIdx] ? cols[summaryIdx].trim() : 'P:0 | A:0 | Hrs:0');
+
                 let obj = {
                     type: typeIdx !== -1 && cols[typeIdx] ? cols[typeIdx].trim().toLowerCase() : '',
                     ps_name: psNameIdx !== -1 && cols[psNameIdx] ? cols[psNameIdx].trim() : '',
                     force_type: forceTypeIdx !== -1 && cols[forceTypeIdx] ? cols[forceTypeIdx].trim() : 'Officer',
-                    name: nameIdx !== -1 && cols[nameIdx] ? cols[nameIdx].trim() : 'N/A',
+                    name: pName,
                     rank: rankIdx !== -1 && cols[rankIdx] ? cols[rankIdx].trim() : 'N/A',
                     mobile: mobileIdx !== -1 && cols[mobileIdx] ? cols[mobileIdx].trim() : 'N/A',
                     landline: landlineIdx !== -1 && cols[landlineIdx] ? cols[landlineIdx].trim() : '',
                     whatsapp: whatsappIdx !== -1 && cols[whatsappIdx] ? cols[whatsappIdx].trim() : '',
                     
-                    status: statusIdx !== -1 && cols[statusIdx] && cols[statusIdx].trim() !== "" ? cols[statusIdx].trim() : 'Off-Duty',
-                    duty_post: postIdx !== -1 && cols[postIdx] ? cols[postIdx].trim() : 'N/A',
-                    in_time: inTimeIdx !== -1 && cols[inTimeIdx] ? cols[inTimeIdx].trim() : '',
-                    out_time: outTimeIdx !== -1 && cols[outTimeIdx] ? cols[outTimeIdx].trim() : '',
-                    in_gps: inGpsIdx !== -1 && cols[inGpsIdx] ? cols[inGpsIdx].trim() : '',
-                    out_gps: outGpsIdx !== -1 && cols[outGpsIdx] ? cols[outGpsIdx].trim() : '',
-                    summary: summaryIdx !== -1 && cols[summaryIdx] ? cols[summaryIdx].trim() : 'P:0 | A:0 | Hrs:0'
+                    status: savedStatus,
+                    duty_post: savedPost,
+                    in_time: savedInTime,
+                    out_time: savedOutTime,
+                    in_gps: savedInGps,
+                    out_gps: savedOutGps,
+                    summary: savedSummary
                 };
-
-                if (activeDutyUser && obj.name.toLowerCase() === activeDutyUser.toLowerCase()) {
-                    obj.status = "On-Duty";
-                    obj.duty_post = localStorage.getItem('activeDutyPost') || 'N/A';
-                    obj.in_time = localStorage.getItem('activeDutyInTime') || '';
-                    obj.in_gps = localStorage.getItem('activeDutyInGps') || '';
-                }
 
                 rawDataList.push(obj);
             }
@@ -333,31 +341,25 @@
         .catch(err => console.error("डेटा लोड करने में समस्या आई।", err));
     }
 
-    // ⚡ सुरक्षा फॉलबैक (Fail-Safe GPS Logic) के साथ सुधरा हुआ अटेंडेंस ट्रैकर
     function handleDutyAction(actionType) {
         const statusField = document.getElementById('gpsStatus');
         statusField.innerText = "🌐 कृपया प्रतीक्षा करें, आपका सटीक GPS लोकेशन कैप्चर किया जा रहा है...";
 
-        // अगर ब्राउज़र सपोर्ट ही नहीं करता
         if (!navigator.geolocation) {
             executeAttendanceLogic(actionType, "GPS Not Supported");
             return;
         }
 
-        // 7 सेकंड के अंदर GPS कनेक्ट करने की कोशिश करेगा, नहीं तो फॉलबैक मोड ऑन कर देगा
         navigator.geolocation.getCurrentPosition((position) => {
             let lat = position.coords.latitude.toFixed(6);
             let lon = position.coords.longitude.toFixed(6);
-            let gpsCoords = `${lat}; ${lon}`;
+            let gpsCoords = `${lat}, ${lon}`;
             executeAttendanceLogic(actionType, gpsCoords);
         }, (error) => {
-            // 🎯 स्मार्ट बैकअप: लोकेशन एरर या डिनाइड होने पर भी हाजिरी बंद नहीं होगी, सीधे सबमिट होगी!
-            console.log("GPS कनेक्ट नहीं हो सका, बैकअप मोड एक्टिवेटेड। एरर कोड:", error.code);
-            executeAttendanceLogic(actionType, "GPS Required/Off");
-        }, { enableHighAccuracy: true, timeout: 7000 }); 
+            executeAttendanceLogic(actionType, "GPS Off/Denied");
+        }, { enableHighAccuracy: true, timeout: 6000 }); 
     }
 
-    // कोर अटेंडेंस प्रोसेसिंग फंक्शन
     function executeAttendanceLogic(actionType, gpsOutput) {
         const statusField = document.getElementById('gpsStatus');
         let currentDateTime = getIndianISTDateTime();
@@ -375,7 +377,7 @@
             let matchedUser = rawDataList.find(u => u.name.toLowerCase().includes(nameInput.toLowerCase()));
 
             if (!matchedUser) {
-                alert("⚠️ दर्ज किया गया नाम डेटाबेस रिकॉर्ड में नहीं मिला।");
+                alert("⚠️ दर्ज किया गया नाम रिकॉर्ड में नहीं मिला।");
                 statusField.innerText = "";
                 return;
             }
@@ -391,17 +393,22 @@
             let hrsCount = parseInt(parts[2].split(':')[1]);
             matchedUser.summary = `P:${pCount} | A:${aCount} | Hrs:${hrsCount}`;
 
+            // 🔒 🎯 लोकल स्टोरेज में डेटा हमेशा के लिए लॉक करना (ताकि ऐप बंद होने पर NIL न हो)
+            let uName = matchedUser.name;
+            localStorage.setItem(`status_${uName}`, "On-Duty");
+            localStorage.setItem(`post_${uName}`, postInput);
+            localStorage.setItem(`inTime_${uName}`, currentDateTime);
+            localStorage.setItem(`inGps_${uName}`, gpsOutput);
+            localStorage.setItem(`summary_${uName}`, matchedUser.summary);
+
             activeDutyUser = matchedUser.name;
             localStorage.setItem('activeDutyUser', matchedUser.name);
-            localStorage.setItem('activeDutyPost', postInput);
-            localStorage.setItem('activeDutyInTime', currentDateTime);
-            localStorage.setItem('activeDutyInGps', matchedUser.in_gps);
 
             document.getElementById('dutyFormArea').style.display = "none";
             document.getElementById('leaveFormArea').style.display = "block";
             document.getElementById('activeDutyStatus').innerText = `✅ आप वर्तमान में "${matchedUser.name}" के नाम से ऑन-ड्यूटी हैं।`;
 
-            alert(`🚨 जय हिन्द, ड्यूटी सफलतापूर्वक जॉइन की गई!\n🕒 समय (IST): ${currentDateTime}\n🧭 GPS: ${gpsOutput}`);
+            alert(`🚨 जय हिन्द, ड्यूटी सफलतापूर्वक जॉइन की गई!\n🕒 IST समय: ${currentDateTime}`);
         } else if (actionType === 'leave') {
             let matchedUser = rawDataList.find(u => u.name.toLowerCase() === activeDutyUser.toLowerCase());
 
@@ -409,10 +416,14 @@
                 let hrsWorked = 8; 
                 if(matchedUser.in_time) {
                     try {
-                        let diffMs = Math.abs(new Date(currentDateTime) - new Date(matchedUser.in_time));
+                        // समय के बीच का अंतर निकालना (घंटे और मिनट की सही गणना)
+                        let timePartIn = matchedUser.in_time.split("|")[1].trim();
+                        let timePartOut = currentDateTime.split("|")[1].trim();
+                        let diffMs = Math.abs(new Date("2026/01/01 " + timePartOut) - new Date("2026/01/01 " + timePartIn));
                         hrsWorked = Math.round(diffMs / (1000 * 60 * 60)) || 1;
                     } catch(e) { hrsWorked = 8; }
                 }
+                
                 matchedUser.status = "Off-Duty";
                 matchedUser.out_time = currentDateTime;
                 matchedUser.out_gps = gpsOutput;
@@ -422,12 +433,16 @@
                 let aCount = parseInt(parts[1].split(':')[1]);
                 let hrsCount = parseInt(parts[2].split(':')[1]) + hrsWorked;
                 matchedUser.summary = `P:${pCount} | A:${aCount} | Hrs:${hrsCount}`;
+
+                // 🔒 🎯 लीव रिकॉर्ड को लोकल स्टोरेज में परमानेंट लॉक करना
+                let uName = matchedUser.name;
+                localStorage.setItem(`status_${uName}`, "Off-Duty");
+                localStorage.setItem(`outTime_${uName}`, currentDateTime);
+                localStorage.setItem(`outGps_${uName}`, gpsOutput);
+                localStorage.setItem(`summary_${uName}`, matchedUser.summary);
             }
 
             localStorage.removeItem('activeDutyUser');
-            localStorage.removeItem('activeDutyPost');
-            localStorage.removeItem('activeDutyInTime');
-            localStorage.removeItem('activeDutyInGps');
             activeDutyUser = null;
 
             document.getElementById('dutyFormArea').style.display = "block";
@@ -435,10 +450,10 @@
             document.getElementById('dutyUserName').value = "";
             document.getElementById('dutyPostName').value = "";
 
-            alert(`🛑 ड्यूटी सफलतापूर्वक समाप्त!\n🕒 समय (IST): ${currentDateTime}`);
+            alert(`🛑 ड्यूटी सफलतापूर्वक समाप्त!\n⏱️ कुल काम: ${hrsWorked} घंटे दर्ज हुए।`);
         }
 
-        statusField.innerText = "✅ डेटा अपडेट हो गया है।";
+        statusField.innerText = "✅ डेटा परमानेंट मेमोरी में सुरक्षित सहेज लिया गया है।";
         buildDynamicUI(); 
     }
 
@@ -472,7 +487,7 @@
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
         
-        let fileDate = new Date().toLocaleDateString().replace(/\//g, "-");
+        let fileDate = new Date().toLocaleDateString('en-GB').replace(/\//g, "-");
         link.setAttribute("download", `Police_Monthly_Report_${fileDate}.csv`);
         document.body.appendChild(link);
         link.click();
@@ -591,7 +606,8 @@
         if (statusClean === 'duty' || statusClean === 'on-duty') {
             trackingDetails = `
                 <p style="color:#ff6600; font-weight:bold;">📍 <b>Duty Post:</b> ${p.duty_post}</p>
-                <p style="font-size:12px;">🧭 <b>In GPS:</b> ${p.in_gps} | 🕒 ${p.in_time}</p>
+                <p style="font-size:12px;">🧭 <b>In GPS:</b> ${p.in_gps}</p>
+                <p style="font-size:12px; color:#2c3e50;">🕒 <b>Joined At:</b> ${p.in_time}</p>
             `;
         }
 
