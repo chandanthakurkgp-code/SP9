@@ -78,20 +78,16 @@
             border-bottom: 3px solid var(--light-green);
         }
 
-        /* 🎯 नया धमाकेदार चेंज: अटेंडेंस बॉक्स के चारों ओर पुलिस लाइट की तरह चलता हुआ और चमकता हुआ (Glow & Chasing) बॉर्डर इफेक्ट */
         .attendance-box {
             background: var(--card-bg); max-width: 600px; margin: 0 auto; padding: 20px;
             border-radius: 20px; 
             position: relative;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            
-            /* एनिमेटेड बॉर्डर के लिए सेटिंग */
             border: 4px solid transparent;
             border-image: linear-gradient(90deg, #FF6600, #ff0000, #002699, #FF6600) 1;
             animation: policeBorderGlow 3s linear infinite;
         }
 
-        /* 🚨 पुलिस लाइट बॉर्डर को घुमाने और चमकाने का एनिमेटेड इंजन */
         @keyframes policeBorderGlow {
             0% {
                 border-image: linear-gradient(0deg, #FF6600, #ff0000, #002699, #FF6600) 1;
@@ -393,6 +389,7 @@
             let summaryIdx = headers.indexOf('summary');
 
             rawDataList = []; 
+            let currentDateOnly = getIndianISTDateTime().split("|")[0].trim(); // आज की लाइव तारीख
 
             for(let i = 1; i < lines.length; i++) {
                 if(!lines[i].trim()) continue;
@@ -407,6 +404,12 @@
                 let savedInGps = localStorage.getItem(`inGps_${pName}`) || (inGpsIdx !== -1 && cols[inGpsIdx] ? cols[inGpsIdx].trim() : '');
                 let savedOutGps = localStorage.getItem(`outGps_${pName}`) || (outGpsIdx !== -1 && cols[outGpsIdx] ? cols[outGpsIdx].trim() : '');
                 let savedSummary = localStorage.getItem(`summary_${pName}`) || (summaryIdx !== -1 && cols[summaryIdx] ? cols[summaryIdx].trim() : 'P:0 | A:0 | Hrs:0s');
+                let lastJoinDate = localStorage.getItem(`lastJoinDate_${pName}`) || '';
+
+                // 🎯 सुधार लॉजिक: यदि ऑफिसर 'On-Duty' नहीं है और उसने आज जॉइन नहीं किया है, तो उसे लाइव Absent मार्क करें
+                if (savedStatus !== 'On-Duty' && lastJoinDate !== currentDateOnly) {
+                    savedStatus = 'Absent';
+                }
 
                 let obj = {
                     type: typeIdx !== -1 && cols[typeIdx] ? cols[typeIdx].trim().toLowerCase() : '',
@@ -728,6 +731,19 @@
         let totalSeconds = parseInt(summaryParts[2].split(':')[1]) || 0;
         let formattedTimeLive = parseSecondsToHMS(totalSeconds);
 
+        // 🎯 सुधार: यदि लाइव चेकिंग में कोई Absent पाया गया, तो उसकी समरी के एब्सेंट 'A' काउंट को भी लाइव +1 दिखाएं
+        let currentDayOnly = getIndianISTDateTime().split("|")[0].trim();
+        let lastJoinDate = localStorage.getItem(`lastJoinDate_${p.name}`) || '';
+        let displaySummary = p.summary;
+        
+        if (statusClean === 'absent' && lastJoinDate !== currentDayOnly) {
+            let pCount = parseInt(summaryParts[0].split(':')[1]);
+            let aCount = parseInt(summaryParts[1].split(':')[1]) + 1; // आज का एब्सेंट जोड़कर दिखाना
+            displaySummary = `P:${pCount} | A:${aCount} | Hrs:${formattedTimeLive}`;
+        } else {
+            displaySummary = `${summaryParts[0]} | ${summaryParts[1]} | Hrs:${formattedTimeLive}`;
+        }
+
         return `
             <div class="list-card">
                 <span class="status-badge ${badgeClass}">${badgeText}</span>
@@ -736,7 +752,7 @@
                 <p>📞 <b>Mobile:</b> ${p.mobile || 'N/A'}</p>
                 ${trackingDetails}
                 <p style="background:#f1f2f6; padding:5px 10px; border-radius:10px; font-size:12px; font-weight:bold; color:#2f3542;">
-                    📊 <b>Attendance Record:</b> ${summaryParts[0]} | ${summaryParts[1]} | <b>Hrs: ${formattedTimeLive}</b>
+                    📊 <b>Attendance Record:</b> ${displaySummary}
                 </p>
                 <div class="btn-group">
                     <a href="tel:${p.mobile}" class="action-btn">📞 CALL</a>
