@@ -145,15 +145,9 @@
             background: var(--card-bg); color: var(--text-color); max-width: 500px;
             margin: 40px auto; padding: 20px; border-radius: 20px; border: 5px solid var(--light-green);
         }
-        .link-item {
-            display: block; background: var(--light-green); color: #fff; padding: 15px;
-            margin: 10px 0; text-decoration: none; text-align: center; font-weight: bold;
-            border-radius: 10px; box-shadow: 0 3px 0 var(--green-shadow);
-        }
-
         .alert-input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 2px solid #c23616; outline: none; font-size: 14px; }
 
-        /* 🎯 लाइव इनकमिंग अलर्ट पॉप-अप बॉक्स का डिज़ाइन */
+        /* 🎯 लाइव इनकमिंग अलर्ट पॉप-अप बॉक्स का डिज़ाइन (हूबहू स्क्रीनशॉट जैसा) */
         .live-popup-alert {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: #ffffff; color: #000000; padding: 25px; border-radius: 20px;
@@ -355,9 +349,47 @@
         }
 
         startLiveWidgetClock();
+        
+        // 🎯 चेक करें कि क्या कोई ऑफिसर लिंक पर क्लिक करके आया है (इनकमिंग अलर्ट चेकर)
+        checkIncomingUrlAlert();
     };
 
-    // 🎯 फिक्स: ब्रॉडकास्ट फायर होने पर स्क्रीन पॉप-अप, वाइब्रेशन और रिंगटोन का मजबूत सिस्टम
+    // 🎯 लाइव अलर्ट रिसेप्शन (जब दूसरे ऑफिसर्स लिंक खोलेंगे)
+    function checkIncomingUrlAlert() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('alert')) {
+            const senderName = urlParams.get('from') || 'Unknown';
+            const senderRank = urlParams.get('rank') || 'Officer';
+            const alertText = urlParams.get('msg') || '';
+            const mediaUrl = urlParams.get('media') || '';
+
+            // दूसरे के फोन पर पॉप-अप दिखाना
+            document.getElementById('alertSenderDetails').innerText = `From: ${senderName} (${senderRank.toUpperCase()})`;
+            document.getElementById('alertBodyText').innerText = alertText;
+            
+            let mediaBox = document.getElementById('alertMediaContainer');
+            mediaBox.innerHTML = "";
+            if(mediaUrl) {
+                mediaBox.innerHTML = `<a href="${mediaUrl}" target="_blank" style="color: #c23616; font-weight: bold; text-decoration: underline;">🔗 ओपन वॉइस / वीडियो संदेश लिंक</a>`;
+            }
+
+            document.getElementById('liveIncomingAlert').style.display = "block";
+
+            // वाइब्रेशन और सायरन बजाना
+            if(navigator.vibrate) {
+                navigator.vibrate([500, 300, 500, 300, 500]);
+                vibrationInterval = setInterval(() => { navigator.vibrate([500, 300, 500]); }, 2000);
+            }
+
+            if(!globalSirenAudio) {
+                globalSirenAudio = new Audio('https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg');
+                globalSirenAudio.loop = true;
+            }
+            globalSirenAudio.play().catch(e => console.log("साउंड लोडिंग"));
+        }
+    }
+
+    // 🎯 फिक्स: संदेश भेजने वाले के मोबाइल पर पॉप-अप नहीं खुलेगा, सीधा व्हाट्सएप पर ब्रॉडकास्ट लिंक जनरेट होगा
     function sendImmediateBroadcast() {
         let authName = document.getElementById('authOfficerName').value.trim();
         let authRank = document.getElementById('authOfficerRank').value;
@@ -374,42 +406,23 @@
             return;
         }
 
-        // 1. लाइव पॉप-अप विंडो में डेटा लोड करें
-        document.getElementById('alertSenderDetails').innerText = `From: ${authName} (${authRank.toUpperCase()})`;
-        document.getElementById('alertBodyText').innerText = msgText;
+        // वर्तमान पेज का बेस यूआरएल तैयार करें
+        let baseUrl = window.location.origin + window.location.pathname;
         
-        let mediaBox = document.getElementById('alertMediaContainer');
-        mediaBox.innerHTML = "";
+        // स्मार्ट यूआरएल पैरामीटर्स बनाएं जो दूसरे ऑफिसर्स के फोन पर पॉप-अप खोलेंगे
+        let broadcastLink = `${baseUrl}?alert=true&from=${encodeURIComponent(authName)}&rank=${encodeURIComponent(authRank)}&msg=${encodeURIComponent(msgText)}`;
         if(mediaUrl) {
-            mediaBox.innerHTML = `<a href="${mediaUrl}" target="_blank" style="color: #c23616; font-weight: bold; text-decoration: underline;">🔗 ओपन वॉइस / वीडियो संदेश लिंक</a>`;
+            broadcastLink += `&media=${encodeURIComponent(mediaUrl)}`;
         }
 
-        // 2. पॉप-अप विंडो को स्क्रीन पर दिखाएं
-        document.getElementById('liveIncomingAlert').style.display = "block";
-
-        // 3. फोन वाइब्रेशन ट्रिगर करें (लगातार पल्स मोड)
-        if(navigator.vibrate) {
-            navigator.vibrate([500, 300, 500, 300, 500]);
-            vibrationInterval = setInterval(() => {
-                navigator.vibrate([500, 300, 500]);
-            }, 2000);
-        }
-
-        // 4. सायरन रिंगटोन बजाएं (लाउड पुलिस बीप सायरन ऑडियो)
-        if(!globalSirenAudio) {
-            globalSirenAudio = new Audio('https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg');
-            globalSirenAudio.loop = true;
-        }
-        globalSirenAudio.play().catch(e => console.log("ऑडियो आटोप्ले ब्राउज़र सुरक्षा द्वारा रोका गया"));
-
-        // व्हाट्सएप्प ब्रॉडकास्ट ग्रुप लिंक फॉरवर्ड
-        let finalMessage = `🚨 EMERGENCY ALERT 🚨\nFrom: ${authName} (${authRank.toUpperCase()})\nMessage: ${msgText}`;
-        if(mediaUrl) finalMessage += `\n🔗 Media Link: ${mediaUrl}`;
+        alert(`📢 ब्रॉडकास्ट लिंक तैयार!\n\nसफलतापूर्वक सभी ऑन-ड्यूटी फ़ोर्स के व्हाट्सएप ग्रुप पर सायरन और पॉप-अप कमांड भेजा जा रहा है।`);
         
-        let whatsappGroupUrl = `https://wa.me/?text=${encodeURIComponent(finalMessage)}`;
+        let finalWhatsappText = `🚨 *EMERGENCY ALERT* 🚨\n*From:* ${authName} (${authRank.toUpperCase()})\n*Message:* ${msgText}\n\n👇 *तत्काल लाइव सायरन और अलर्ट देखने के लिए नीचे लिंक दबाएं:* \n👉 ${broadcastLink}`;
+        
+        let whatsappGroupUrl = `https://wa.me/?text=${encodeURIComponent(finalWhatsappText)}`;
         window.open(whatsappGroupUrl, '_blank');
 
-        // इनपुट रिसेट और मोड बंद
+        // इनपुट रिसेट और मोड बंद (भेजने वाले के फोन पर पॉप-अप नहीं खुला)
         document.getElementById('authOfficerName').value = "";
         document.getElementById('authOfficerRank').value = "";
         document.getElementById('alertTextMessage').value = "";
@@ -417,34 +430,29 @@
         toggleModal('emergencyAlertModal');
     }
 
-    // 🛑 सायरन, वाइब्रेशन और पॉप-अप बंद करने का सिस्टम
     function stopEmergencyEffects() {
         document.getElementById('liveIncomingAlert').style.display = "none";
         if(globalSirenAudio) {
             globalSirenAudio.pause();
             globalSirenAudio.currentTime = 0;
         }
-        if(vibrationInterval) {
-            clearInterval(vibrationInterval);
-        }
-        if(navigator.vibrate) {
-            navigator.vibrate(0);
-        }
+        if(vibrationInterval) clearInterval(vibrationInterval);
+        if(navigator.vibrate) navigator.vibrate(0);
+        
+        // यूआरएल क्लीनअप ताकि पेज रीफ्रेश होने पर दोबारा न बजे
+        window.history.replaceState({}, document.title, window.location.pathname);
         alert("✅ अलर्ट सफलतापूर्वक एक्नॉलेज (प्राप्त) कर लिया गया है।");
     }
 
     function startLiveWidgetClock() {
         const daysHindi = ["रविवार (Sunday)", "सोमवार (Monday)", "मंगलवार (Tuesday)", "बुधवार (Wednesday)", "गुरुवार (Thursday)", "शुक्रवार (Friday)", "शनिवार (Saturday)"];
-        
         function updateWidget() {
             let now = new Date();
             let timeOptions = { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
             document.getElementById('liveClock').innerText = now.toLocaleTimeString('en-US', timeOptions);
-            
             let dateOptions = { timeZone: 'Asia/Kolkata', day: '2-digit', month: '2-digit', year: 'numeric' };
             let dateStr = now.toLocaleDateString('en-GB', dateOptions);
             document.getElementById('liveDay').innerText = `${daysHindi[now.getDay()]} [${dateStr}]`;
-            
             let hrs = now.getHours();
             let weatherStr = "🌡️ 31°C सामान्य";
             if (hrs >= 5 && hrs < 11) weatherStr = "🌅 28°C सुहावना सुबह";
@@ -452,10 +460,8 @@
             else if (hrs >= 16 && hrs < 19) weatherStr = "🌤️ 32°C हल्की धूप";
             else if (hrs >= 19 && hrs < 23) weatherStr = "🌙 29°C साफ़ रात";
             else weatherStr = "🌃 27°C ठंडी रात";
-            
             document.getElementById('liveWeather').innerText = weatherStr;
         }
-        
         updateWidget();
         setInterval(updateWidget, 1000);
     }
@@ -464,11 +470,7 @@
         let dateObj = new Date();
         let dateOptions = { timeZone: 'Asia/Kolkata', day: '2-digit', month: '2-digit', year: 'numeric' };
         let timeOptions = { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
-        
-        let dateString = dateObj.toLocaleDateString('en-GB', dateOptions); 
-        let timeString = dateObj.toLocaleTimeString('en-US', timeOptions); 
-        
-        return `${dateString} | ${timeString}`;
+        return `${dateObj.toLocaleDateString('en-GB', dateOptions)} | ${dateObj.toLocaleTimeString('en-US', timeOptions)}`;
     }
 
     function parseSecondsToHMS(totalSeconds) {
@@ -480,32 +482,19 @@
 
     function loadGoogleSheetDirectly() {
         const url = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=csv&gid=0&v=` + Date.now();
-
         fetch(url)
         .then(response => response.text())
         .then(text => {
             let cleanText = text.replace(/\r/g, ""); 
             let lines = cleanText.split("\n");
             if (lines.length === 0 || !lines[0].trim()) return;
-
             let headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/^["']|["']$/g, ""));
             
-            let typeIdx = headers.indexOf('type');
-            let psNameIdx = headers.indexOf('ps_name');
-            let forceTypeIdx = headers.indexOf('force_type');
-            let nameIdx = headers.indexOf('name');
-            let rankIdx = headers.indexOf('rank');
-            let mobileIdx = headers.indexOf('mobile');
-            let landlineIdx = headers.indexOf('landline');
-            let whatsappIdx = headers.indexOf('whatsapp');
-            
-            let statusIdx = headers.indexOf('status');
-            let postIdx = headers.indexOf('duty_post');
-            let inTimeIdx = headers.indexOf('in_time');
-            let outTimeIdx = headers.indexOf('out_time');
-            let inGpsIdx = headers.indexOf('in_gps');
-            let outGpsIdx = headers.indexOf('out_gps');
-            let summaryIdx = headers.indexOf('summary');
+            let typeIdx = headers.indexOf('type'), psNameIdx = headers.indexOf('ps_name'), forceTypeIdx = headers.indexOf('force_type');
+            let nameIdx = headers.indexOf('name'), rankIdx = headers.indexOf('rank'), mobileIdx = headers.indexOf('mobile');
+            let landlineIdx = headers.indexOf('landline'), whatsappIdx = headers.indexOf('whatsapp'), statusIdx = headers.indexOf('status');
+            let postIdx = headers.indexOf('duty_post'), inTimeIdx = headers.indexOf('in_time'), outTimeIdx = headers.indexOf('out_time');
+            let inGpsIdx = headers.indexOf('in_gps'), outGpsIdx = headers.indexOf('out_gps'), summaryIdx = headers.indexOf('summary');
 
             rawDataList = []; 
             let currentDateOnly = getIndianISTDateTime().split("|")[0].trim(); 
@@ -513,7 +502,6 @@
             for(let i = 1; i < lines.length; i++) {
                 if(!lines[i].trim()) continue;
                 let cols = lines[i].split(',').map(c => c.trim().replace(/^["']|["']$/g, ""));
-                
                 let pName = nameIdx !== -1 && cols[nameIdx] ? cols[nameIdx].trim() : 'N/A';
                 
                 let savedStatus = localStorage.getItem(`status_${pName}`) || (statusIdx !== -1 && cols[statusIdx] ? cols[statusIdx].trim() : 'Off-Duty');
@@ -529,50 +517,29 @@
                     savedStatus = 'Absent';
                 }
 
-                let obj = {
+                rawDataList.push({
                     type: typeIdx !== -1 && cols[typeIdx] ? cols[typeIdx].trim().toLowerCase() : '',
                     ps_name: psNameIdx !== -1 && cols[psNameIdx] ? cols[psNameIdx].trim() : '',
                     force_type: forceTypeIdx !== -1 && cols[forceTypeIdx] ? cols[forceTypeIdx].trim() : 'Officer',
-                    name: pName,
-                    rank: rankIdx !== -1 && cols[rankIdx] ? cols[rankIdx].trim() : 'N/A',
+                    name: pName, rank: rankIdx !== -1 && cols[rankIdx] ? cols[rankIdx].trim() : 'N/A',
                     mobile: mobileIdx !== -1 && cols[mobileIdx] ? cols[mobileIdx].trim() : 'N/A',
                     landline: landlineIdx !== -1 && cols[landlineIdx] ? cols[landlineIdx].trim() : '',
                     whatsapp: whatsappIdx !== -1 && cols[whatsappIdx] ? cols[whatsappIdx].trim() : '',
-                    
-                    status: savedStatus,
-                    duty_post: savedPost,
-                    in_time: savedInTime,
-                    out_time: savedOutTime,
-                    in_gps: savedInGps,
-                    out_gps: savedOutGps,
-                    summary: savedSummary
-                };
-
-                rawDataList.push(obj);
+                    status: savedStatus, duty_post: savedPost, in_time: savedInTime, out_time: savedOutTime,
+                    in_gps: savedInGps, out_gps: savedOutGps, summary: savedSummary
+                });
             }
-
             buildDynamicUI();
-        })
-        .catch(err => console.error("डेटा लोड करने में समस्या आई।", err));
+        }).catch(err => console.error(err));
     }
 
     function handleDutyAction(actionType) {
         const statusField = document.getElementById('gpsStatus');
         statusField.innerText = "🌐 कृपया प्रतीक्षा करें, आपका सटीक GPS लोकेशन कैप्चर किया जा रहा है...";
-
-        if (!navigator.geolocation) {
-            executeAttendanceLogic(actionType, "GPS Not Supported");
-            return;
-        }
-
+        if (!navigator.geolocation) { executeAttendanceLogic(actionType, "GPS Not Supported"); return; }
         navigator.geolocation.getCurrentPosition((position) => {
-            let lat = position.coords.latitude.toFixed(6);
-            let lon = position.coords.longitude.toFixed(6);
-            let gpsCoords = `${lat}, ${lon}`;
-            executeAttendanceLogic(actionType, gpsCoords);
-        }, (error) => {
-            executeAttendanceLogic(actionType, "GPS Off/Denied");
-        }, { enableHighAccuracy: true, timeout: 6000 }); 
+            executeAttendanceLogic(actionType, `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`);
+        }, (error) => { executeAttendanceLogic(actionType, "GPS Off/Denied"); }, { enableHighAccuracy: true, timeout: 6000 }); 
     }
 
     function executeAttendanceLogic(actionType, gpsOutput) {
@@ -583,174 +550,67 @@
         if (actionType === 'join') {
             let nameInput = document.getElementById('dutyUserName').value.trim();
             let postInput = document.getElementById('dutyPostName').value.trim();
-            
-            if (!nameInput || !postInput) {
-                alert("कृपया अपना नाम और ड्यूटी स्थान दोनों भरें!");
-                statusField.innerText = "";
-                return;
-            }
-
+            if (!nameInput || !postInput) { alert("कृपया अपना नाम और ड्यूटी स्थान दोनों भरें!"); statusField.innerText = ""; return; }
             let matchedUser = rawDataList.find(u => u.name.toLowerCase().includes(nameInput.toLowerCase()));
-
-            if (!matchedUser) {
-                alert("⚠️ दर्ज किया गया नाम रिकॉर्ड में नहीं मिला।");
-                statusField.innerText = "";
-                return;
-            }
+            if (!matchedUser) { alert("⚠️ दर्ज किया गया नाम रिकॉर्ड में नहीं मिला।"); statusField.innerText = ""; return; }
 
             let uName = matchedUser.name;
             let lastJoinDate = localStorage.getItem(`lastJoinDate_${uName}`);
-            if (lastJoinDate === currentDateOnly) {
-                alert(`⚠️ आप आज (${currentDateOnly}) की हाजिरी पहले ही दर्ज कर चुके हैं!\nदिन में केवल एक बार ही ड्यूटी जॉइन की जा सकती है।`);
-                statusField.innerText = "";
-                return;
-            }
+            if (lastJoinDate === currentDateOnly) { alert(`⚠️ आप आज (${currentDateOnly}) की हाजिरी पहले ही दर्ज कर चुके हैं!`); statusField.innerText = ""; return; }
 
-            matchedUser.status = "On-Duty";
-            matchedUser.duty_post = postInput;
-            matchedUser.in_time = currentDateTime;
-            matchedUser.in_gps = gpsOutput;
-
+            matchedUser.status = "On-Duty"; matchedUser.duty_post = postInput; matchedUser.in_time = currentDateTime; matchedUser.in_gps = gpsOutput;
             let parts = matchedUser.summary.split('|').map(p => p.trim());
             let pCount = parseInt(parts[0].split(':')[1]) + 1;
             let aCount = parseInt(parts[1].split(':')[1]);
-            
-            let rawHrsString = parts[2].split(':')[1].trim();
-            let oldSeconds = parseInt(rawHrsString) || 0;
-
+            let oldSeconds = parseInt(parts[2].split(':')[1]) || 0;
             matchedUser.summary = `P:${pCount} | A:${aCount} | Hrs:${oldSeconds}s`;
 
             localStorage.setItem(`timestamp_join_${uName}`, Date.now().toString());
+            localStorage.setItem(`status_${uName}`, "On-Duty"); localStorage.setItem(`post_${uName}`, postInput);
+            localStorage.setItem(`inTime_${uName}`, currentDateTime); localStorage.setItem(`inGps_${uName}`, gpsOutput);
+            localStorage.setItem(`summary_${uName}`, matchedUser.summary); localStorage.setItem(`lastJoinDate_${uName}`, currentDateOnly); 
 
-            localStorage.setItem(`status_${uName}`, "On-Duty");
-            localStorage.setItem(`post_${uName}`, postInput);
-            localStorage.setItem(`inTime_${uName}`, currentDateTime);
-            localStorage.setItem(`inGps_${uName}`, gpsOutput);
-            localStorage.setItem(`summary_${uName}`, matchedUser.summary);
-            localStorage.setItem(`lastJoinDate_${uName}`, currentDateOnly); 
-
-            activeDutyUser = matchedUser.name;
-            localStorage.setItem('activeDutyUser', matchedUser.name);
-
-            document.getElementById('dutyFormArea').style.display = "none";
-            document.getElementById('leaveFormArea').style.display = "block";
+            activeDutyUser = matchedUser.name; localStorage.setItem('activeDutyUser', matchedUser.name);
+            document.getElementById('dutyFormArea').style.display = "none"; document.getElementById('leaveFormArea').style.display = "block";
             document.getElementById('activeDutyStatus').innerText = `✅ आप वर्तमान में "${matchedUser.name}" के नाम से ऑन-ड्यूटी हैं।`;
-
-            alert(`🚨 जय हिन्द, ड्यूटी सफलतापूर्वक जॉइन की गई!\n🕒 IST समय: ${currentDateTime}`);
+            alert(`🚨 जय हिन्द, ड्यूटी सफलतापूर्वक जॉइन की गई!`);
         } else if (actionType === 'leave') {
             let matchedUser = rawDataList.find(u => u.name.toLowerCase() === activeDutyUser.toLowerCase());
-
             if (matchedUser) {
-                let uName = matchedUser.name;
-                let elapsedSeconds = 28800; 
-
+                let uName = matchedUser.name; let elapsedSeconds = 28800; 
                 let joinTimestampStr = localStorage.getItem(`timestamp_join_${uName}`);
-                if (joinTimestampStr) {
-                    let diffMs = Date.now() - parseInt(joinTimestampStr);
-                    elapsedSeconds = Math.floor(diffMs / 1000); 
-                }
+                if (joinTimestampStr) elapsedSeconds = Math.floor((Date.now() - parseInt(joinTimestampStr)) / 1000); 
                 
-                matchedUser.status = "Off-Duty";
-                matchedUser.out_time = currentDateTime;
-                matchedUser.out_gps = gpsOutput;
-
+                matchedUser.status = "Off-Duty"; matchedUser.out_time = currentDateTime; matchedUser.out_gps = gpsOutput;
                 let parts = matchedUser.summary.split('|').map(p => p.trim());
-                let pCount = parseInt(parts[0].split(':')[1]);
-                let aCount = parseInt(parts[1].split(':')[1]);
-                
-                let rawHrsString = parts[2].split(':')[1].trim();
-                let oldSeconds = parseInt(rawHrsString) || 0;
-                let newTotalSeconds = oldSeconds + elapsedSeconds; 
+                let oldSeconds = parseInt(parts[2].split(':')[1]) || 0;
+                matchedUser.summary = `P:${parts[0].split(':')[1]} | A:${parts[1].split(':')[1]} | Hrs:${oldSeconds + elapsedSeconds}s`;
 
-                matchedUser.summary = `P:${pCount} | A:${aCount} | Hrs:${newTotalSeconds}s`;
-
-                localStorage.setItem(`status_${uName}`, "Off-Duty");
-                localStorage.setItem(`outTime_${uName}`, currentDateTime);
-                localStorage.setItem(`outGps_${uName}`, gpsOutput);
-                localStorage.setItem(`summary_${uName}`, matchedUser.summary);
+                localStorage.setItem(`status_${uName}`, "Off-Duty"); localStorage.setItem(`outTime_${uName}`, currentDateTime);
+                localStorage.setItem(`outGps_${uName}`, gpsOutput); localStorage.setItem(`summary_${uName}`, matchedUser.summary);
                 localStorage.removeItem(`timestamp_join_${uName}`);
             }
-
-            localStorage.removeItem('activeDutyUser');
-            activeDutyUser = null;
-
-            document.getElementById('dutyFormArea').style.display = "block";
-            document.getElementById('leaveFormArea').style.display = "none";
-            document.getElementById('dutyUserName').value = "";
-            document.getElementById('dutyPostName').value = "";
-
+            localStorage.removeItem('activeDutyUser'); activeDutyUser = null;
+            document.getElementById('dutyFormArea').style.display = "block"; document.getElementById('leaveFormArea').style.display = "none";
+            document.getElementById('dutyUserName').value = ""; document.getElementById('dutyPostName').value = "";
             alert(`🛑 ड्यूटी सफलतापूर्वक समाप्त!`);
         }
-
         statusField.innerText = "✅ डेटा परमानेंट मेमोरी में सुरक्षित सहेज लिया गया है।";
         buildDynamicUI(); 
     }
 
     function downloadMonthlyCSVReport() {
-        if(rawDataList.length === 0) {
-            alert("डाउनलोड करने के लिए कोई डेटा उपलब्ध नहीं है!");
-            return;
-        }
-
-        let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += "Name,Rank,Police Station,Force Type,Current Status,Duty Post,Join Time (IST),Leave Time (IST),Join GPS,Leave GPS,Attendance Summary (P|A|Hrs)\n";
-        
+        if(rawDataList.length === 0) return alert("कोई डेटा नहीं मिला!");
+        let csvContent = "data:text/csv;charset=utf-8,Name,Rank,Police Station,Force Type,Current Status,Duty Post,Join Time (IST),Leave Time (IST),Join GPS,Leave GPS,Attendance Summary (P|A|Hrs)\n";
         rawDataList.forEach(p => {
             let summaryParts = p.summary.split('|').map(x => x.trim());
             let totalSeconds = parseInt(summaryParts[2].split(':')[1]) || 0;
-            let formattedReportTime = parseSecondsToHMS(totalSeconds); 
-            let readableSummary = `${summaryParts[0]} | ${summaryParts[1]} | Hrs:${formattedReportTime}`;
-
-            let row = [
-                `"${p.name}"`,
-                `"${p.rank}"`,
-                `"${p.ps_name}"`,
-                `"${p.force_type}"`,
-                `"${p.status}"`,
-                `"${p.duty_post}"`,
-                `"${p.in_time}"`,
-                `"${p.out_time}"`,
-                `"${p.in_gps}"`,
-                `"${p.out_gps}"`,
-                `"${readableSummary}"`
-            ].join(",");
-            csvContent += row + "\n";
+            let readableSummary = `${summaryParts[0]} | ${summaryParts[1]} | Hrs:${parseSecondsToHMS(totalSeconds)}`;
+            csvContent += [`"${p.name}"`,`"${p.rank}"`,`"${p.ps_name}"`,`"${p.force_type}"`,`"${p.status}"`,`"${p.duty_post}"`,`"${p.in_time}"`,`"${p.out_time}"`,`"${p.in_gps}"`,`"${p.out_gps}"`,`"${readableSummary}"`].join(",") + "\n";
         });
-        
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        
-        let fileDate = new Date().toLocaleDateString('en-GB').replace(/\//g, "-");
-        link.setAttribute("download", `Police_Monthly_Report_${fileDate}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-
-    function downloadMonthlyCSVReport() {
-        if(rawDataList.length === 0) {
-            alert("डाउनलोड करने के लिए कोई डेटा उपलब्ध नहीं है!");
-            return;
-        }
-        let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += "Name,Rank,Police Station,Force Type,Current Status,Duty Post,Join Time (IST),Leave Time (IST),Join GPS,Leave GPS,Attendance Summary (P|A|Hrs)\n";
-        rawDataList.forEach(p => {
-            let summaryParts = p.summary.split('|').map(x => x.trim());
-            let totalSeconds = parseInt(summaryParts[2].split(':')[1]) || 0;
-            let formattedReportTime = parseSecondsToHMS(totalSeconds); 
-            let readableSummary = `${summaryParts[0]} | ${summaryParts[1]} | Hrs:${formattedReportTime}`;
-            let row = [`"${p.name}"`,`"${p.rank}"`,`"${p.ps_name}"`,`"${p.force_type}"`,`"${p.status}"`,`"${p.duty_post}"`,`"${p.in_time}"`,`"${p.out_time}"`,`"${p.in_gps}"`,`"${p.out_gps}"`,`"${readableSummary}"`].join(",");
-            csvContent += row + "\n";
-        });
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        let fileDate = new Date().toLocaleDateString('en-GB').replace(/\//g, "-");
-        link.setAttribute("download", `Police_Monthly_Report_${fileDate}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent));
+        link.setAttribute("download", `Police_Monthly_Report_${new Date().toLocaleDateString('en-GB').replace(/\//g, "-")}.csv`);
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
     }
 
     function buildDynamicUI() {
@@ -760,152 +620,58 @@
             if (obj.type === "police_stations") {
                 let forceKey = obj.force_type.toLowerCase().trim();
                 if (forceKey === "si & asi") forceKey = "si_asi";
-                if (forceKey === "officer") {
-                    shopData["police_stations"].partners.push(obj);
-                } else if (shopData[forceKey]) {
-                    shopData[forceKey].partners.push(obj);
-                }
-            } else if(shopData[obj.type]) {
-                shopData[obj.type].partners.push(obj);
-            }
+                if (forceKey === "officer") shopData["police_stations"].partners.push(obj);
+                else if (shopData[forceKey]) shopData[forceKey].partners.push(obj);
+            } else if(shopData[obj.type]) shopData[obj.type].partners.push(obj);
         });
         init();
     }
 
     function init() {
-        stationGroupKeys.forEach(key => {
-            if(shopData[key] && shopData[key].partners) {
-                shopData[key].partners.sort((a, b) => a.ps_name.localeCompare(b.ps_name));
-            }
-        });
-        const tabMenu = document.getElementById('tabMenu');
-        const contentArea = document.getElementById('contentArea');
-        tabMenu.innerHTML = "";
-        contentArea.innerHTML = "";
+        stationGroupKeys.forEach(key => { if(shopData[key] && shopData[key].partners) shopData[key].partners.sort((a, b) => a.ps_name.localeCompare(b.ps_name)); });
+        const tabMenu = document.getElementById('tabMenu'), contentArea = document.getElementById('contentArea');
+        tabMenu.innerHTML = ""; contentArea.innerHTML = "";
         createTab("📂 DIRECTORY", "directory", true);
         Object.keys(shopData).forEach(key => createTab(shopData[key].title, key, false));
-        const dirSection = document.createElement('div');
-        dirSection.id = 'directory';
-        dirSection.className = "section active";
+        const dirSection = document.createElement('div'); dirSection.id = 'directory'; dirSection.className = "section active";
         let allHtml = "";
         Object.keys(shopData).forEach(key => {
             if (shopData[key].partners.length === 0) return;
-            const section = document.createElement('div');
-            section.id = key;
-            section.className = "section";
+            const section = document.createElement('div'); section.id = key; section.className = "section";
             let html = "";
             if (stationGroupKeys.includes(key)) {
                 const grouped = {};
-                shopData[key].partners.forEach(p => {
-                    let psName = p.ps_name || 'Unknown';
-                    if (!grouped[psName]) grouped[psName] = [];
-                    grouped[psName].push(p);
-                });
+                shopData[key].partners.forEach(p => { let psName = p.ps_name || 'Unknown'; if (!grouped[psName]) grouped[psName] = []; grouped[psName].push(p); });
                 Object.keys(grouped).forEach(psName => {
                     html += `<div class="ps-header" onclick="togglePS(this)"><span>🚨 ${psName} Police Station</span><span class="ps-icon">▼</span></div><div class="ps-content">${grouped[psName].map(p => createCard(p)).join('')}</div>`;
                 });
-            } else {
-                html = shopData[key].partners.map(p => createCard(p)).join('');
-            }
-            section.innerHTML = html;
-            allHtml += html;
-            contentArea.appendChild(section);
+            } else html = shopData[key].partners.map(p => createCard(p)).join('');
+            section.innerHTML = html; allHtml += html; contentArea.appendChild(section);
         });
-        dirSection.innerHTML = allHtml;
-        contentArea.prepend(dirSection);
+        dirSection.innerHTML = allHtml; contentArea.prepend(dirSection);
         document.getElementById('globalSearch').onkeyup = globalFilter;
     }
 
-    function createTab(text, id, active) {
-        const btn = document.createElement('button');
-        btn.className = `tab-btn ${active ? 'active' : ''}`;
-        btn.innerText = text;
-        btn.onclick = (e) => showSection(id, e.target);
-        document.getElementById('tabMenu').appendChild(btn);
-    }
-
     function createCard(p) {
-        let forceType = (p.force_type || 'Officer').trim();
-        let statusClean = p.status.toLowerCase();
-        let badgeClass = 'off';
-        let badgeText = '⚪ Off Duty';
-        if (statusClean === 'duty' || statusClean === 'on-duty') {
-            badgeClass = 'on';
-            badgeText = '🟢 On Duty';
-        } else if (statusClean === 'absent') {
-            badgeClass = 'absent';
-            badgeText = '🔴 Absent';
-        }
-        let trackingDetails = "";
-        if (statusClean === 'duty' || statusClean === 'on-duty') {
-            trackingDetails = `<p style="color:#ff6600; font-weight:bold;">📍 <b>Duty Post:</b> ${p.duty_post}</p><p style="font-size:12px;">🧭 <b>In GPS:</b> ${p.in_gps}</p><p style="font-size:12px; color:#2c3e50;">🕒 <b>Joined At:</b> ${p.in_time}</p>`;
-        }
+        let forceType = p.force_type.trim(), statusClean = p.status.toLowerCase();
+        let badgeClass = 'off', badgeText = '⚪ Off Duty';
+        if (statusClean === 'duty' || statusClean === 'on-duty') { badgeClass = 'on'; badgeText = '🟢 On Duty'; }
+        else if (statusClean === 'absent') { badgeClass = 'absent'; badgeText = '🔴 Absent'; }
+        let trackingDetails = (statusClean === 'duty' || statusClean === 'on-duty') ? `<p style="color:#ff6600; font-weight:bold;">📍 <b>Duty Post:</b> ${p.duty_post}</p><p style="font-size:12px;">🧭 <b>In GPS:</b> ${p.in_gps}</p><p style="font-size:12px; color:#2c3e50;">🕒 <b>Joined At:</b> ${p.in_time}</p>` : "";
         let summaryParts = p.summary.split('|').map(x => x.trim());
         let totalSeconds = parseInt(summaryParts[2].split(':')[1]) || 0;
-        let formattedTimeLive = parseSecondsToHMS(totalSeconds);
-        let currentDayOnly = getIndianISTDateTime().split("|")[0].trim();
-        let lastJoinDate = localStorage.getItem(`lastJoinDate_${p.name}`) || '';
-        let displaySummary = p.summary;
-        if (statusClean === 'absent' && lastJoinDate !== currentDayOnly) {
-            let pCount = parseInt(summaryParts[0].split(':')[1]);
-            let aCount = parseInt(summaryParts[1].split(':')[1]) + 1; 
-            displaySummary = `P:${pCount} | A:${aCount} | Hrs:${formattedTimeLive}`;
-        } else {
-            displaySummary = `${summaryParts[0]} | ${summaryParts[1]} | Hrs:${formattedTimeLive}`;
-        }
+        let displaySummary = (statusClean === 'absent' && localStorage.getItem(`lastJoinDate_${p.name}`) !== getIndianISTDateTime().split("|")[0].trim()) ? `P:${parseInt(summaryParts[0].split(':')[1])} | A:${parseInt(summaryParts[1].split(':')[1]) + 1} | Hrs:${parseSecondsToHMS(totalSeconds)}` : `${summaryParts[0]} | ${summaryParts[1]} | Hrs:${parseSecondsToHMS(totalSeconds)}`;
         return `<div class="list-card"><span class="status-badge ${badgeClass}">${badgeText}</span><h3 style="color:var(--police-blue); margin-top:0; font-weight:900; font-size: 20px; padding-right: 90px;">${p.name || 'N/A'}</h3><p>🎖️ <b>Rank:</b> ${p.rank || 'N/A'} (${forceType})</p><p>📞 <b>Mobile:</b> ${p.mobile || 'N/A'}</p>${trackingDetails}<p style="background:#f1f2f6; padding:5px 10px; border-radius:10px; font-size:12px; font-weight:bold; color:#2f3542;">📊 <b>Attendance Record:</b> ${displaySummary}</p><div class="btn-group"><a href="tel:${p.mobile}" class="action-btn">📞 CALL</a>${p.landline ? `<a href="tel:${p.landline}" class="action-btn">☎️ LANDLINE</a>` : ""}<a href="https://wa.me/${p.whatsapp}" class="action-btn">💬 WHATSAPP</a></div></div>`;
     }
 
-    function toggleNightMode() {
-        document.body.classList.toggle('night-mode');
-        const isNight = document.body.classList.contains('night-mode');
-        localStorage.setItem('theme', isNight ? 'night' : 'light');
-        updateModeButton(isNight);
-    }
-    function updateModeButton(isNight) {
-        const btn = document.getElementById('modeBtn');
-        if (btn) btn.innerHTML = isNight ? "☀️ LIGHT MODE" : "🌙 NIGHT MODE";
-    }
-    function toggleModal(id) {
-        const m = document.getElementById(id);
-        if (m) m.style.display = (m.style.display === "block") ? "none" : "block";
-    }
-    function changeZoom(delta) {
-        let currentZoom = parseFloat(document.body.style.zoom) || 1.0;
-        currentZoom += delta;
-        document.body.style.zoom = Math.min(Math.max(currentZoom, 0.8), 1.5);
-    }
+    function toggleNightMode() { document.body.classList.toggle('night-mode'); localStorage.setItem('theme', document.body.classList.contains('night-mode') ? 'night' : 'light'); updateModeButton(document.body.classList.contains('night-mode')); }
+    function updateModeButton(isNight) { const btn = document.getElementById('modeBtn'); if (btn) btn.innerHTML = isNight ? "☀️ LIGHT MODE" : "🌙 NIGHT MODE"; }
+    function toggleModal(id) { const m = document.getElementById(id); if (m) m.style.display = (m.style.display === "block") ? "none" : "block"; }
+    function changeZoom(delta) { let currentZoom = parseFloat(document.body.style.zoom) || 1.0; document.body.style.zoom = Math.min(Math.max(currentZoom + delta, 0.8), 1.5); }
     function goHome() { location.reload(); }
-    function togglePS(header) {
-        const content = header.nextElementSibling;
-        const icon = header.querySelector('.ps-icon');
-        if (content.classList.contains('open')) {
-            content.classList.remove('open');
-            icon.innerText = '▼';
-        } else {
-            content.classList.add('open');
-            icon.innerText = '▲';
-        }
-    }
-    function showSection(id, btn) {
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        const target = document.getElementById(id);
-        if (target) target.classList.add('active');
-        btn.classList.add('active');
-        btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-    }
-    function globalFilter() {
-        const term = document.getElementById('globalSearch').value.toLowerCase();
-        const activeSection = document.querySelector('.section.active');
-        if (activeSection) {
-            const cards = activeSection.querySelectorAll('.list-card');
-            cards.forEach(card => {
-                const isMatch = card.innerText.toLowerCase().includes(term);
-                card.style.display = isMatch ? "block" : "none";
-            });
-        }
-    }
+    function togglePS(header) { const content = header.nextElementSibling; const icon = header.querySelector('.ps-icon'); if (content.classList.contains('open')) { content.classList.remove('open'); icon.innerText = '▼'; } else { content.classList.add('open'); icon.innerText = '▲'; } }
+    function showSection(id, btn) { document.querySelectorAll('.section').forEach(s => s.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); const target = document.getElementById(id); if (target) target.classList.add('active'); btn.classList.add('active'); btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); }
+    function globalFilter() { const term = document.getElementById('globalSearch').value.toLowerCase(), activeSection = document.querySelector('.section.active'); if (activeSection) { activeSection.querySelectorAll('.list-card').forEach(card => { card.style.display = card.innerText.toLowerCase().includes(term) ? "block" : "none"; }); } }
 </script>
 </body>
 </html>
