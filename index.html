@@ -131,7 +131,7 @@
         .search-container { background: var(--dark-bg); padding: 0 15px 15px 15px; border-bottom: 3px solid var(--light-green); }
         .global-search-bar { width: 100%; max-width: 600px; padding: 15px; border-radius: 50px; border: 3px solid var(--light-green); font-size: 18px; display: block; margin: 0 auto; outline: none; }
 
-        /* मक्खन जैसा स्क्रॉल बार बार */
+        /* मक्खन जैसा स्क्रॉल बार */
         .nav-container { 
             background-color: var(--dark-bg); padding: 15px 0; position: sticky; top: 0; z-index: 1000; 
             display: flex; gap: 10px; border-bottom: 4px solid var(--light-green); overflow-x: auto; 
@@ -219,13 +219,15 @@
         <div class="attendance-box">
             <h3 id="panelWelcome" style="margin-top:0; color:var(--police-blue);">जय हिन्द, ऑफिसर</h3>
             
+            <!-- 🎯 जॉइन ड्यूटी बटन एरिया -->
             <div id="dutyFormArea">
                 <input type="text" id="dutyPostName" class="post-input" placeholder="ड्यूटी पोस्ट/स्थान का नाम लिखें...">
                 <button class="duty-master-btn join" onclick="handleDutyAction('join')">🚨 JOIN DUTY</button>
             </div>
             
+            <!-- 🎯 🛑 लीव ड्यूटी (Duty Off) बटन एरिया जो कभी गायब नहीं होगा -->
             <div id="leaveFormArea" style="display:none;">
-                <p style="font-weight:bold; color:#4cd137;">🔴 आप अभी ऑन-ड्यूटी पर तैनात हैं।</p>
+                <p id="activeDutyStatus" style="font-weight:bold; color:#4cd137;"></p>
                 <button class="duty-master-btn leave" onclick="handleDutyAction('leave')">🛑 LEAVE DUTY (ड्यूटी समाप्त)</button>
             </div>
             
@@ -299,7 +301,6 @@
         loadGoogleSheetDirectly();
     };
 
-    // 🕒 🇮🇳 सटीक भारतीय समय/तारीख फॉर्मेट (DD/MM/YYYY | HH:MM:SS AM/PM)
     function getIndianISTDateTime() {
         let dateObj = new Date();
         let dateOptions = { timeZone: 'Asia/Kolkata', day: '2-digit', month: '2-digit', year: 'numeric' };
@@ -344,7 +345,6 @@
                 
                 let pName = nameIdx !== -1 && cols[nameIdx] ? cols[nameIdx].trim() : 'N/A';
                 
-                // 🔒 🎯 रिफ्रेश होने पर डेटा सुरक्षित रखने के लिए स्थानीय मेमोरी सिंक लॉजिक
                 let savedStatus = localStorage.getItem(`status_${pName}`) || (statusIdx !== -1 && cols[statusIdx] ? cols[statusIdx].trim() : 'Off-Duty');
                 let savedPost = localStorage.getItem(`post_${pName}`) || (postIdx !== -1 && cols[postIdx] ? cols[postIdx].trim() : 'N/A');
                 let savedInTime = localStorage.getItem(`inTime_${pName}`) || (inTimeIdx !== -1 && cols[inTimeIdx] ? cols[inTimeIdx].trim() : '');
@@ -402,6 +402,8 @@
 
         document.getElementById('loginError').style.display = "none";
         currentUserMobile = mobileNum;
+        
+        // 🎯 फिक्स: ऑब्जेक्ट रेफरेंस को हमेशा लाइव सिंक में रखना
         loggedInUserObj = matchedUser;
         localStorage.setItem('userMobileNumber', mobileNum); 
 
@@ -426,7 +428,7 @@
     function setupAttendancePanel(user) {
         document.getElementById('panelWelcome').innerText = `जय हिन्द, ${user.name} (${user.rank})`;
         
-        // 🔒 🎯 रिफ्रेश होने के बाद बटन को सही स्थिति (State) में रखने के लिए लोकल स्टोरेज चेक
+        // 🔒 🎯 बटन कंट्रोल का सबसे मजबूत लॉजिक
         let storedStatus = localStorage.getItem(`status_${user.name}`) || user.status;
         let storedPost = localStorage.getItem(`post_${user.name}`) || user.duty_post;
 
@@ -462,8 +464,9 @@
     function executeAttendanceLogic(actionType, gpsOutput) {
         const statusField = document.getElementById('gpsStatus');
         let currentDateTime = getIndianISTDateTime();
+        
+        // 🎯 फिक्स: मेमोरी लीक रोकने के लिए यूज़र नाम से दोबारा खोजना
         let uName = loggedInUserObj.name;
-
         let matchedUser = rawDataList.find(u => u.name === uName);
 
         if (actionType === 'join') {
@@ -495,9 +498,11 @@
             alert(`🚨 ड्यूटी सफलतापूर्वक जॉइन की गई!`);
         } else if (actionType === 'leave') {
             let hrsWorked = 8; 
-            if(matchedUser.in_time) {
+            let savedInTime = localStorage.getItem(`inTime_${uName}`) || matchedUser.in_time;
+            
+            if(savedInTime) {
                 try {
-                    let timePartIn = matchedUser.in_time.split("|")[1].trim();
+                    let timePartIn = savedInTime.split("|")[1].trim();
                     let timePartOut = currentDateTime.split("|")[1].trim();
                     let diffMs = Math.abs(new Date("2026/01/01 " + timePartOut) - new Date("2026/01/01 " + timePartIn));
                     hrsWorked = Math.round(diffMs / (1000 * 60 * 60)) || 1;
@@ -524,7 +529,7 @@
             alert(`🛑 ड्यूटी सफलतापूर्वक समाप्त!`);
         }
 
-        statusField.innerText = "✅ डेटा सुरक्षित सहेज लिया गया है।";
+        statusField.innerText = "✅ डेटा सुरक्षित सलेज लिया गया है।";
         setupAttendancePanel(matchedUser);
         buildDynamicUI(); 
     }
