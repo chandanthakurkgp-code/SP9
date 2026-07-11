@@ -254,16 +254,13 @@
         }
     };
 
-    // 🕒 🎯 नया टाइम और तारीख फॉर्मेट (DD/MM/YYYY और HH:MM:SS AM/PM)
     function getIndianISTDateTime() {
         let dateObj = new Date();
-        
-        // भारतीय मानक समय (IST) कन्वर्जन विकल्प
         let dateOptions = { timeZone: 'Asia/Kolkata', day: '2-digit', month: '2-digit', year: 'numeric' };
         let timeOptions = { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
         
-        let dateString = dateObj.toLocaleDateString('en-GB', dateOptions); // DD/MM/YYYY फॉर्मेट देता है
-        let timeString = dateObj.toLocaleTimeString('en-US', timeOptions); // HH:MM:SS AM/PM फॉर्मेट देता है
+        let dateString = dateObj.toLocaleDateString('en-GB', dateOptions); 
+        let timeString = dateObj.toLocaleTimeString('en-US', timeOptions); 
         
         return `${dateString} | ${timeString}`;
     }
@@ -305,7 +302,6 @@
                 
                 let pName = nameIdx !== -1 && cols[nameIdx] ? cols[nameIdx].trim() : 'N/A';
                 
-                // 🔒 🎯 लोकल स्टोरेज (Permanent Memory) से पुराना अटेंडेंस रिकॉर्ड रिकवर करना
                 let savedStatus = localStorage.getItem(`status_${pName}`) || (statusIdx !== -1 && cols[statusIdx] ? cols[statusIdx].trim() : 'Off-Duty');
                 let savedPost = localStorage.getItem(`post_${pName}`) || (postIdx !== -1 && cols[postIdx] ? cols[postIdx].trim() : 'N/A');
                 let savedInTime = localStorage.getItem(`inTime_${pName}`) || (inTimeIdx !== -1 && cols[inTimeIdx] ? cols[inTimeIdx].trim() : '');
@@ -363,6 +359,7 @@
     function executeAttendanceLogic(actionType, gpsOutput) {
         const statusField = document.getElementById('gpsStatus');
         let currentDateTime = getIndianISTDateTime();
+        let currentDateOnly = currentDateTime.split("|")[0].trim(); // Extract DD/MM/YYYY
 
         if (actionType === 'join') {
             let nameInput = document.getElementById('dutyUserName').value.trim();
@@ -382,6 +379,15 @@
                 return;
             }
 
+            // 🎯 सुधार 2: दिन में केवल 1 बार ड्यूटी जॉइन करने की कड़ाई
+            let uName = matchedUser.name;
+            let lastJoinDate = localStorage.getItem(`lastJoinDate_${uName}`);
+            if (lastJoinDate === currentDateOnly) {
+                alert(`⚠️ आप आज (${currentDateOnly}) की हाजिरी पहले ही दर्ज कर चुके हैं!\nदिन में केवल एक बार ही ड्यूटी जॉइन की जा सकती है।`);
+                statusField.innerText = "";
+                return;
+            }
+
             matchedUser.status = "On-Duty";
             matchedUser.duty_post = postInput;
             matchedUser.in_time = currentDateTime;
@@ -393,13 +399,13 @@
             let hrsCount = parseInt(parts[2].split(':')[1]);
             matchedUser.summary = `P:${pCount} | A:${aCount} | Hrs:${hrsCount}`;
 
-            // 🔒 🎯 लोकल स्टोरेज में डेटा हमेशा के लिए लॉक करना (ताकि ऐप बंद होने पर NIL न हो)
-            let uName = matchedUser.name;
+            // लोकल स्टोरेज में लॉक करना
             localStorage.setItem(`status_${uName}`, "On-Duty");
             localStorage.setItem(`post_${uName}`, postInput);
             localStorage.setItem(`inTime_${uName}`, currentDateTime);
             localStorage.setItem(`inGps_${uName}`, gpsOutput);
             localStorage.setItem(`summary_${uName}`, matchedUser.summary);
+            localStorage.setItem(`lastJoinDate_${uName}`, currentDateOnly); // तारीख लॉक हुई
 
             activeDutyUser = matchedUser.name;
             localStorage.setItem('activeDutyUser', matchedUser.name);
@@ -416,7 +422,6 @@
                 let hrsWorked = 8; 
                 if(matchedUser.in_time) {
                     try {
-                        // समय के बीच का अंतर निकालना (घंटे और मिनट की सही गणना)
                         let timePartIn = matchedUser.in_time.split("|")[1].trim();
                         let timePartOut = currentDateTime.split("|")[1].trim();
                         let diffMs = Math.abs(new Date("2026/01/01 " + timePartOut) - new Date("2026/01/01 " + timePartIn));
@@ -424,6 +429,7 @@
                     } catch(e) { hrsWorked = 8; }
                 }
                 
+                // 🎯 सुधार 1: 'rawDataList' ऑब्जेक्ट में भी तुरंत 'Off-Duty' अपडेट करें
                 matchedUser.status = "Off-Duty";
                 matchedUser.out_time = currentDateTime;
                 matchedUser.out_gps = gpsOutput;
@@ -434,7 +440,7 @@
                 let hrsCount = parseInt(parts[2].split(':')[1]) + hrsWorked;
                 matchedUser.summary = `P:${pCount} | A:${aCount} | Hrs:${hrsCount}`;
 
-                // 🔒 🎯 लीव रिकॉर्ड को लोकल स्टोरेज में परमानेंट लॉक करना
+                // लोकल स्टोरेज में लॉक करना
                 let uName = matchedUser.name;
                 localStorage.setItem(`status_${uName}`, "Off-Duty");
                 localStorage.setItem(`outTime_${uName}`, currentDateTime);
