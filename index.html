@@ -21,6 +21,8 @@
             --status-on: #4cd137;
             --status-off: #7f8c8d;
             --status-absent: #c23616;
+            --summary-bg: #f1f2f6;
+            --summary-text: #2f3542;
         }
 
         body.night-mode {
@@ -29,6 +31,8 @@
             --card-text-mute: #dddddd; 
             --card-bg: #1e1e1e;
             --dark-bg: #000000;
+            --summary-bg: #2d3436;
+            --summary-text: #ffffff;
         }
         body.night-mode .post-input {
             color: #ffffff !important;
@@ -654,7 +658,7 @@
                 <p>🎖️ <b>Rank:</b> ${p.rank || 'N/A'} (${forceType})</p>
                 <p>📞 <b>Mobile:</b> ${p.mobile || 'N/A'}</p>
                 ${trackingDetails}
-                <p style="background:#f1f2f6; padding:5px 10px; border-radius:10px; font-size:12px; font-weight:bold; color:#2f3542;">
+                <p style="background: var(--summary-bg); padding:5px 10px; border-radius:10px; font-size:12px; font-weight:bold; color: var(--summary-text);">
                     📊 <b>Attendance Record:</b> ${summaryParts[0]} | ${summaryParts[1]} | <b>Hrs: ${formattedTimeLive}</b>
                 </p>
                 <div class="btn-group">
