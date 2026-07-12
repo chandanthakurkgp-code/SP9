@@ -235,9 +235,31 @@
         .list-card p b { color: var(--text-color); }
         
         .status-badge { position: absolute; top: 15px; right: 15px; padding: 5px 12px; border-radius: 50px; font-size: 11px; font-weight: 900; color: white; text-transform: uppercase; }
-        .status-badge.on { background-color: var(--status-on); }
+        
+        /* 🎯 नया धमाकेदार नियम: On-Duty बैज के लिए दिल की तरह धड़कने वाला और रेड-ग्रीन-येलो रंग बदलने वाला इंजन */
+        .status-badge.on { 
+            animation: onDutyHeartbeat 0.8s infinite ease-in-out, onDutyColorChaser 3s infinite linear;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
         .status-badge.off { background-color: var(--status-off); }
         .status-badge.absent { background-color: var(--status-absent); }
+
+        /* 🫀 दिल की धड़कन (Heartbeat) इफेक्ट */
+        @keyframes onDutyHeartbeat {
+            0% { transform: scale(1); }
+            30% { transform: scale(1.15); }
+            40% { transform: scale(1.05); }
+            60% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* 🎨 रंग बदलने वाला (Red, Green, Yellow) इफेक्ट */
+        @keyframes onDutyColorChaser {
+            0% { background-color: #ff0000; box-shadow: 0 0 12px #ff0000; }      /* Red */
+            33% { background-color: #2ecc71; box-shadow: 0 0 12px #2ecc71; }     /* Green */
+            66% { background-color: #f1c40f; box-shadow: 0 0 12px #f1c40f; }     /* Yellow */
+            100% { background-color: #ff0000; box-shadow: 0 0 12px #ff0000; }    /* Back to Red */
+        }
 
         .ps-header {
             background-color: var(--light-green); color: #ffffff; padding: 15px;
@@ -584,7 +606,6 @@
                 let savedSummary = localStorage.getItem(`summary_${pName}`) || (summaryIdx !== -1 && cols[summaryIdx] ? cols[summaryIdx].trim() : 'P:0 | A:0 | Hrs:0s');
                 let lastJoinDate = localStorage.getItem(`lastJoinDate_${pName}`) || '';
 
-                // 🎯 नया नियम: रात को 12 बजे के बाद तारीख बदलते ही ऑन-ड्यूटी के अलावा सबको 'Off-Duty' ही दिखाएगा
                 if (savedStatus !== 'On-Duty') {
                     savedStatus = 'Off-Duty';
                 }
@@ -733,18 +754,15 @@
         document.getElementById('globalSearch').onkeyup = globalFilter;
     }
 
-    function createTab(text, id, active) {
-        const btn = document.createElement('button');
-        btn.className = `tab-btn ${active ? 'active' : ''}`;
-        btn.innerText = text;
-        btn.onclick = (e) => showSection(id, e.target);
-        document.getElementById('tabMenu').appendChild(btn);
-    }
-
     function createCard(p) {
         let forceType = p.force_type.trim(), statusClean = p.status.toLowerCase();
         let badgeClass = 'off', badgeText = '⚪ Off Duty';
-        if (statusClean === 'duty' || statusClean === 'on-duty') { badgeClass = 'on'; badgeText = '🟢 On Duty'; }
+        
+        /* 🎯 यहाँ On Duty होने पर एनिमेटेड चेजिंग टेक्स्ट जनरेट होगा */
+        if (statusClean === 'duty' || statusClean === 'on-duty') { 
+            badgeClass = 'on'; 
+            badgeText = '🟢 On Duty'; 
+        }
         
         let trackingDetails = (statusClean === 'duty' || statusClean === 'on-duty') ? `<p style="color:#ff6600; font-weight:bold;">📍 <b>Duty Post:</b> ${p.duty_post}</p><p style="font-size:12px;">🧭 <b>In GPS:</b> ${p.in_gps}</p><p style="font-size:12px; color:#2c3e50;">🕒 <b>Joined At:</b> ${p.in_time}</p>` : "";
         
@@ -759,8 +777,6 @@
         let lastJoinDate = localStorage.getItem(`lastJoinDate_${p.name}`) || '';
         let displaySummary = "";
         
-        // 🎯 संसोधित लॉजिक: जैसे ही रात को 12 बजे के बाद डेट चेंज होगी, जिन अधिकारियों ने जॉइन नहीं किया है 
-        // उनका बैज Off Duty दिखेगा पर उनके समरी रिकॉर्ड में (A-1) ऑटोमैटिक प्लस होकर दिखाई देगा।
         if (statusClean !== 'on-duty' && lastJoinDate !== currentDayOnly) {
             let pCount = parseInt(summaryParts[0].split(':')[1]) || 0;
             let aCount = (parseInt(summaryParts[1].split(':')[1]) || 0) + 1; 
