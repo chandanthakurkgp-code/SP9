@@ -65,6 +65,7 @@
             color: #ffffff; 
             border-bottom: 4px solid #cc5200;
         }
+        /* 🎯 फिक्स्ड CSS टाइटल क्लैंप वैल्यू */
         .main-title { font-size: clamp(24px, 6vw, 40px); font-weight: 900; margin: 0; text-transform: uppercase; }
 
         .top-actions {
@@ -236,7 +237,7 @@
         
         .status-badge { position: absolute; top: 15px; right: 15px; padding: 5px 12px; border-radius: 50px; font-size: 11px; font-weight: 900; color: white; text-transform: uppercase; }
         
-        /* 🎯 नया धमाकेदार नियम: On-Duty बैज के लिए दिल की तरह धड़कने वाला और रेड-ग्रीन-येलो रंग बदलने वाला इंजन */
+        /* 🎯 On-Duty दिल की धड़कन + रेड-ग्रीन-येलो कलर चेज़र इफेक्ट */
         .status-badge.on { 
             animation: onDutyHeartbeat 0.8s infinite ease-in-out, onDutyColorChaser 3s infinite linear;
             box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
@@ -244,7 +245,6 @@
         .status-badge.off { background-color: var(--status-off); }
         .status-badge.absent { background-color: var(--status-absent); }
 
-        /* 🫀 दिल की धड़कन (Heartbeat) इफेक्ट */
         @keyframes onDutyHeartbeat {
             0% { transform: scale(1); }
             30% { transform: scale(1.15); }
@@ -253,12 +253,11 @@
             100% { transform: scale(1); }
         }
 
-        /* 🎨 रंग बदलने वाला (Red, Green, Yellow) इफेक्ट */
         @keyframes onDutyColorChaser {
-            0% { background-color: #ff0000; box-shadow: 0 0 12px #ff0000; }      /* Red */
-            33% { background-color: #2ecc71; box-shadow: 0 0 12px #2ecc71; }     /* Green */
-            66% { background-color: #f1c40f; box-shadow: 0 0 12px #f1c40f; }     /* Yellow */
-            100% { background-color: #ff0000; box-shadow: 0 0 12px #ff0000; }    /* Back to Red */
+            0% { background-color: #ff0000; box-shadow: 0 0 12px #ff0000; }
+            33% { background-color: #2ecc71; box-shadow: 0 0 12px #2ecc71; }
+            66% { background-color: #f1c40f; box-shadow: 0 0 12px #f1c40f; }
+            100% { background-color: #ff0000; box-shadow: 0 0 12px #ff0000; }
         }
 
         .ps-header {
@@ -604,8 +603,7 @@
                 let savedInGps = localStorage.getItem(`inGps_${pName}`) || (inGpsIdx !== -1 && cols[inGpsIdx] ? cols[inGpsIdx].trim() : '');
                 let savedOutGps = localStorage.getItem(`outGps_${pName}`) || (outGpsIdx !== -1 && cols[outGpsIdx] ? cols[outGpsIdx].trim() : '');
                 let savedSummary = localStorage.getItem(`summary_${pName}`) || (summaryIdx !== -1 && cols[summaryIdx] ? cols[summaryIdx].trim() : 'P:0 | A:0 | Hrs:0s');
-                let lastJoinDate = localStorage.getItem(`lastJoinDate_${pName}`) || '';
-
+                
                 if (savedStatus !== 'On-Duty') {
                     savedStatus = 'Off-Duty';
                 }
@@ -614,22 +612,16 @@
                     type: typeIdx !== -1 && cols[typeIdx] ? cols[typeIdx].trim().toLowerCase() : '',
                     ps_name: psNameIdx !== -1 && cols[psNameIdx] ? cols[psNameIdx].trim() : '',
                     force_type: forceTypeIdx !== -1 && cols[forceTypeIdx] ? cols[forceTypeIdx].trim() : 'Officer',
-                    name: pName, 
-                    rank: rankIdx !== -1 && cols[rankIdx] ? cols[rankIdx].trim() : 'N/A',
+                    name: pName, rank: rankIdx !== -1 && cols[rankIdx] ? cols[rankIdx].trim() : 'N/A',
                     mobile: mobileIdx !== -1 && cols[mobileIdx] ? cols[mobileIdx].trim() : 'N/A',
                     landline: landlineIdx !== -1 && cols[landlineIdx] ? cols[landlineIdx].trim() : '',
                     whatsapp: whatsappIdx !== -1 && cols[whatsappIdx] ? cols[whatsappIdx].trim() : '',
-                    status: savedStatus, 
-                    duty_post: savedPost, 
-                    in_time: savedInTime, 
-                    out_time: savedOutTime,
-                    in_gps: savedInGps, 
-                    out_gps: savedOutGps, 
-                    summary: savedSummary
+                    status: savedStatus, duty_post: savedPost, in_time: savedInTime, out_time: savedOutTime,
+                    in_gps: savedInGps, out_gps: savedOutGps, summary: savedSummary
                 });
             }
             buildDynamicUI(); 
-        }).catch(err => console.error("गूगल शीट लोड एरर: ", err));
+        }).catch(err => console.error("Error loading Sheet data: ", err));
     }
 
     function handleDutyAction(actionType) {
@@ -754,11 +746,18 @@
         document.getElementById('globalSearch').onkeyup = globalFilter;
     }
 
+    function createTab(text, id, active) {
+        const btn = document.createElement('button');
+        btn.className = `tab-btn ${active ? 'active' : ''}`;
+        btn.innerText = text;
+        btn.onclick = (e) => showSection(id, e.target);
+        document.getElementById('tabMenu').appendChild(btn);
+    }
+
     function createCard(p) {
         let forceType = p.force_type.trim(), statusClean = p.status.toLowerCase();
         let badgeClass = 'off', badgeText = '⚪ Off Duty';
         
-        /* 🎯 यहाँ On Duty होने पर एनिमेटेड चेजिंग टेक्स्ट जनरेट होगा */
         if (statusClean === 'duty' || statusClean === 'on-duty') { 
             badgeClass = 'on'; 
             badgeText = '🟢 On Duty'; 
