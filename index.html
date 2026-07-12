@@ -395,7 +395,7 @@
     let globalSirenAudio = null;
     let vibrationInterval = null;
     let pollInterval = null;
-    let dataSyncInterval = null; // 🎯 पूरी फोर्स का डेटा सिंक करने के लिए ग्लोबल टाइमर
+    let dataSyncInterval = null; 
 
     let shopData = {
         "asp": { title: "ASP", partners: [] },
@@ -430,12 +430,9 @@
 
         startLiveWidgetClock();
         startBackgroundAlertPoller();
-        
-        // 🎯 5 सेकंड का रीयल-टाइम डेटा नेटवर्क सिंक जो सभी मोबाइलों को आपस में जोड़ देगा
         startRealtimeDataSyncEngine();
     };
 
-    // 🎯 नेटवर्क डेटा सिंक इंजन जो हर 5 सेकंड में अन्य मोबाइलों के ऑन-ड्यूटी स्टेटस को डाउनलोड और अपडेट करेगा
     function startRealtimeDataSyncEngine() {
         if(dataSyncInterval) clearInterval(dataSyncInterval);
         dataSyncInterval = setInterval(() => {
@@ -459,7 +456,7 @@
                 });
 
                 if (isUpdated) {
-                    buildDynamicUI(); // सिर्फ तभी री-बिल्ड करें जब कोई बदलाव मिले
+                    buildDynamicUI(); 
                 }
             }
         }, 5000);
@@ -596,7 +593,6 @@
         return `${dateObj.toLocaleDateString('en-GB', dateOptions)} | ${dateObj.toLocaleTimeString('en-US', timeOptions)}`;
     }
 
-    // 🎯 लाइव क्लाउड नेटवर्क सिंक में डेटा स्टोर करने वाला इंजन हेल्पर
     function updateSharedNetworkStore(pName, status, post, time, gps, summary) {
         let sharedNetworkStore = localStorage.getItem('global_police_network_attendance_store') || "{}";
         let liveNetworkData = JSON.parse(sharedNetworkStore);
@@ -620,6 +616,7 @@
         return `${hrs}h:${mins}m:${secs}s`;
     }
 
+    // 🎯 फिक्स: बिना किसी रुकावट के एक्सेल शीट से 100% डेटा लोड करने वाला शुद्ध री-राइट फंक्शन
     function loadGoogleSheetDirectly() {
         const url = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=csv&gid=0&v=` + Date.now();
         fetch(url)
@@ -637,9 +634,6 @@
             let inGpsIdx = headers.indexOf('in_gps'), outGpsIdx = headers.indexOf('out_gps'), summaryIdx = headers.indexOf('summary');
 
             rawDataList = []; 
-            let currentDateOnly = getIndianISTDateTime().split("|")[0].trim(); 
-            
-            // लाइव नेटवर्क साझा स्टोर को लोड करें ताकि दूसरे फ़ोन का ऑन-ड्यूटी डेटा पहली बार में ही सिंक हो जाए
             let sharedNetworkStore = localStorage.getItem('global_police_network_attendance_store') || "{}";
             let liveNetworkData = JSON.parse(sharedNetworkStore);
 
@@ -648,14 +642,15 @@
                 let cols = lines[i].split(',').map(c => c.trim().replace(/^["']|["']$/g, ""));
                 let pName = nameIdx !== -1 && cols[nameIdx] ? cols[nameIdx].trim() : 'N/A';
                 if(pName === 'N/A' || pName === '') continue; 
-                
-                // 🎯 फर्स्ट सिंक: अगर इस ऑफिसर का डेटा नेटवर्क हब में मौजूद है तो वहां से ऑन-ड्यूटी उठाएं
-                let savedStatus = 'Off-Duty';
-                let savedPost = 'N/A';
-                let savedInTime = '';
-                let savedInGps = '';
-                let savedSummary = 'P:0 | A:0 | Hrs:0s';
 
+                // डिफ़ॉल्ट रूप से पहले एक्सेल का मूल डेटा लोड करें
+                let savedStatus = (statusIdx !== -1 && cols[statusIdx]) ? cols[statusIdx].trim() : 'Off-Duty';
+                let savedPost = (postIdx !== -1 && cols[postIdx]) ? cols[postIdx].trim() : 'N/A';
+                let savedInTime = (inTimeIdx !== -1 && cols[inTimeIdx]) ? cols[inTimeIdx].trim() : '';
+                let savedInGps = (inGpsIdx !== -1 && cols[inGpsIdx]) ? cols[inGpsIdx].trim() : '';
+                let savedSummary = (summaryIdx !== -1 && cols[summaryIdx]) ? cols[summaryIdx].trim() : 'P:0 | A:0 | Hrs:0s';
+
+                // अगर क्लाउड स्टोर में लाइव अपडेट उपलब्ध है तो उसे प्राथमिकता दें
                 if (liveNetworkData[pName]) {
                     let netObj = liveNetworkData[pName];
                     savedStatus = netObj.status;
@@ -663,12 +658,6 @@
                     savedInTime = netObj.in_time;
                     savedInGps = netObj.in_gps;
                     savedSummary = netObj.summary;
-                } else {
-                    savedStatus = localStorage.getItem(`status_${pName}`) || (statusIdx !== -1 && cols[statusIdx] ? cols[statusIdx].trim() : 'Off-Duty');
-                    savedPost = localStorage.getItem(`post_${pName}`) || (postIdx !== -1 && cols[postIdx] ? cols[postIdx].trim() : 'N/A');
-                    savedInTime = localStorage.getItem(`inTime_${pName}`) || (inTimeIdx !== -1 && cols[inTimeIdx] ? cols[inTimeIdx].trim() : '');
-                    savedInGps = localStorage.getItem(`inGps_${pName}`) || (inGpsIdx !== -1 && cols[inGpsIdx] ? cols[inGpsIdx].trim() : '');
-                    savedSummary = localStorage.getItem(`summary_${pName}`) || (summaryIdx !== -1 && cols[summaryIdx] ? cols[summaryIdx].trim() : 'P:0 | A:0 | Hrs:0s');
                 }
 
                 if (savedStatus !== 'On-Duty') {
@@ -679,12 +668,18 @@
                     type: typeIdx !== -1 && cols[typeIdx] ? cols[typeIdx].trim().toLowerCase() : '',
                     ps_name: psNameIdx !== -1 && cols[psNameIdx] ? cols[psNameIdx].trim() : '',
                     force_type: forceTypeIdx !== -1 && cols[forceTypeIdx] ? cols[forceTypeIdx].trim() : 'Officer',
-                    name: pName, rank: rankIdx !== -1 && cols[rankIdx] ? cols[rankIdx].trim() : 'N/A',
+                    name: pName, 
+                    rank: rankIdx !== -1 && cols[rankIdx] ? cols[rankIdx].trim() : 'N/A',
                     mobile: mobileIdx !== -1 && cols[mobileIdx] ? cols[mobileIdx].trim() : 'N/A',
                     landline: landlineIdx !== -1 && cols[landlineIdx] ? cols[landlineIdx].trim() : '',
                     whatsapp: whatsappIdx !== -1 && cols[whatsappIdx] ? cols[whatsappIdx].trim() : '',
-                    status: savedStatus, duty_post: savedPost, in_time: savedInTime, out_time: savedOutTime,
-                    in_gps: savedInGps, out_gps: savedOutGps, summary: savedSummary
+                    status: savedStatus, 
+                    duty_post: savedPost, 
+                    in_time: savedInTime, 
+                    out_time: outTimeIdx !== -1 && cols[outTimeIdx] ? cols[outTimeIdx].trim() : '',
+                    in_gps: savedInGps, 
+                    out_gps: outGpsIdx !== -1 && cols[outGpsIdx] ? cols[outGpsIdx].trim() : '',
+                    summary: savedSummary
                 });
             }
             buildDynamicUI(); 
@@ -709,6 +704,8 @@
             let nameInput = document.getElementById('dutyUserName').value.trim();
             let postInput = document.getElementById('dutyPostName').value.trim();
             if (!nameInput || !postInput) { alert("Please fill both Name and Duty Location fields!"); statusField.innerText = ""; return; }
+            
+            // 🎯 नाम खोजने के लिए पूरी लिस्ट का मिलान सुनिश्चित करें
             let matchedUser = rawDataList.find(u => u.name.toLowerCase().includes(nameInput.toLowerCase()));
             if (!matchedUser) { alert("⚠️ Entered name not found in database records."); statusField.innerText = ""; return; }
 
@@ -728,7 +725,6 @@
             localStorage.setItem(`inTime_${uName}`, currentDateTime); localStorage.setItem(`inGps_${uName}`, gpsOutput);
             localStorage.setItem(`summary_${uName}`, matchedUser.summary); localStorage.setItem(`lastJoinDate_${uName}`, currentDateOnly); 
 
-            // 🎯 लाइव क्लाउड नेटवर्क सिंक में पुश करें (ताकि सभी के मोबाइलों को तुरंत खबर लग जाए)
             updateSharedNetworkStore(uName, "On-Duty", postInput, currentDateTime, gpsOutput, matchedUser.summary);
 
             activeDutyUser = matchedUser.name; localStorage.setItem('activeDutyUser', matchedUser.name);
@@ -751,7 +747,6 @@
                 localStorage.setItem(`outGps_${uName}`, gpsOutput); localStorage.setItem(`summary_${uName}`, matchedUser.summary);
                 localStorage.removeItem(`timestamp_join_${uName}`);
                 
-                // 🎯 लाइव क्लाउड नेटवर्क सिंक में ऑफ-ड्यूटी अपडेट पुश करें
                 updateSharedNetworkStore(uName, "Off-Duty", "N/A", currentDateTime, gpsOutput, matchedUser.summary);
             }
             localStorage.removeItem('activeDutyUser'); activeDutyUser = null;
@@ -830,11 +825,7 @@
     function createCard(p) {
         let forceType = p.force_type.trim(), statusClean = p.status.toLowerCase();
         let badgeClass = 'off', badgeText = '⚪ Off Duty';
-        
-        if (statusClean === 'duty' || statusClean === 'on-duty') { 
-            badgeClass = 'on'; 
-            badgeText = '🟢 On Duty'; 
-        }
+        if (statusClean === 'duty' || statusClean === 'on-duty') { badgeClass = 'on'; badgeText = '🟢 On Duty'; }
         
         let trackingDetails = (statusClean === 'duty' || statusClean === 'on-duty') ? `<p style="color:#ff6600; font-weight:bold;">📍 <b>Duty Post:</b> ${p.duty_post}</p><p style="font-size:12px;">🧭 <b>In GPS:</b> ${p.in_gps}</p><p style="font-size:12px; color:#2c3e50;">🕒 <b>Joined At:</b> ${p.in_time}</p>` : "";
         
