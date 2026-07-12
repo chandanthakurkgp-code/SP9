@@ -42,6 +42,14 @@
             color: #2ecc71 !important;
         }
         
+        /* 🎯 नाइट मोड फिक्स: Joined At वाले टाइम और डेट टेक्स्ट को डार्क मोड में चमकाने का नियम */
+        body.night-mode .list-card p[style*="color:#2c3e50"] {
+            color: #ffffff !important;
+        }
+        body.night-mode .list-card p[style*="color:#2c3e50"] b {
+            color: #ff9933 !important; /* Joined At का लेबल चमकदार केसरी दिखेगा */
+        }
+        
         body { 
             font-family: 'Segoe UI', Arial, sans-serif; 
             margin: 0; padding: 0; 
@@ -58,7 +66,7 @@
             color: #ffffff; 
             border-bottom: 4px solid #cc5200;
         }
-        .main-title { font-size: clamp(24px, 6vw, 40px); font-weight: 900; margin: 0; text-transform: uppercase; }
+        .main-title { font-size: clamp(24px, vw, 40px); font-weight: 900; margin: 0; text-transform: uppercase; }
 
         .top-actions {
             background: var(--dark-bg); padding: 15px 10px;
@@ -166,7 +174,6 @@
 
         .alert-input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 2px solid #c23616; outline: none; font-size: 14px; }
 
-        /* 🎯 थानों के व्हाट्सएप बटन्स के लिए नया कड़क ग्रिड लेआउट */
         .ps-group-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -337,7 +344,6 @@
         
         <button onclick="sendImmediateBroadcast()" style="width:100%; padding:14px; background:#c23616; color:white; border:none; border-radius:50px; font-weight:bold; font-size:15px; cursor:pointer; box-shadow: 0 4px 0 #8c260f;">📢 SEND IMMEDIATELY TO ALL OFFICERS</button>
         
-        <!-- 🎯 नया सेक्शन: थानों के क्विक व्हाट्सएप ग्रुप लिंक्स बटन्स (Kharagpur Town PS शामिल) -->
         <h4 style="margin: 15px 0 5px 0; color: #c23616; font-weight: 900; text-align: center;">🟢 QUICK POLICE STATION WHATSAPP GROUPS</h4>
         <div class="ps-group-grid">
             <a href="https://chat.whatsapp.com/ExampleKGP" target="_blank" class="ps-group-btn">🚨 KHARAGPUR TOWN</a>
@@ -665,20 +671,6 @@
         buildDynamicUI(); 
     }
 
-    function downloadMonthlyCSVReport() {
-        if(rawDataList.length === 0) return alert("No data found!");
-        let csvContent = "data:text/csv;charset=utf-8,Name,Rank,Police Station,Force Type,Current Status,Duty Post,Join Time (IST),Leave Time (IST),Join GPS,Leave GPS,Attendance Summary (P|A|Hrs)\n";
-        rawDataList.forEach(p => {
-            let summaryParts = p.summary.split('|').map(x => x.trim());
-            let totalSeconds = parseInt(summaryParts[2].split(':')[1]) || 0;
-            let readableSummary = `${summaryParts[0]} | ${summaryParts[1]} | Hrs:${parseSecondsToHMS(totalSeconds)}`;
-            csvContent += [`"${p.name}"`,`"${p.rank}"`,`"${p.ps_name}"`,`"${p.force_type}"`,`"${p.status}"`,`"${p.duty_post}"`,`"${p.in_time}"`,`"${p.out_time}"`,`"${p.in_gps}"`,`"${p.out_gps}"`,`"${readableSummary}"`].join(",") + "\n";
-        });
-        const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent));
-        link.setAttribute("download", `Police_Monthly_Report_${new Date().toLocaleDateString('en-GB').replace(/\//g, "-")}.csv`);
-        document.body.appendChild(link); link.click(); document.body.removeChild(link);
-    }
-
     function buildDynamicUI() {
         Object.keys(shopData).forEach(key => shopData[key].partners = []);
         rawDataList.forEach(obj => {
@@ -734,6 +726,8 @@
         let badgeClass = 'off', badgeText = '⚪ Off Duty';
         if (statusClean === 'duty' || statusClean === 'on-duty') { badgeClass = 'on'; badgeText = '🟢 On Duty'; }
         else if (statusClean === 'absent') { badgeClass = 'absent'; badgeText = '🔴 Absent'; }
+        
+        /* 🎯 यहाँ टाइम का विशिष्ट रंग स्टाइल सिंक है जो सीएसएस फिक्स द्वारा नाइट मोड में व्हाइट हो जाएगा */
         let trackingDetails = (statusClean === 'duty' || statusClean === 'on-duty') ? `<p style="color:#ff6600; font-weight:bold;">📍 <b>Duty Post:</b> ${p.duty_post}</p><p style="font-size:12px;">🧭 <b>In GPS:</b> ${p.in_gps}</p><p style="font-size:12px; color:#2c3e50;">🕒 <b>Joined At:</b> ${p.in_time}</p>` : "";
         
         let summaryParts = p.summary.split('|').map(x => x.trim());
