@@ -145,6 +145,26 @@
             background: var(--card-bg); color: var(--text-color); max-width: 500px;
             margin: 40px auto; padding: 20px; border-radius: 20px; border: 5px solid var(--light-green);
         }
+        
+        /* 🎯 सुंदर हरा बटन सेटिंग - क्विक लिंक्स और इम्पोर्टेन्ट साइट्स के अंदर के वेबसाइट्स के लिए */
+        .link-item {
+            display: block; 
+            background: var(--light-green); 
+            color: #fff !important; 
+            padding: 15px;
+            margin: 12px 0; 
+            text-decoration: none; 
+            text-align: center; 
+            font-weight: 900;
+            text-transform: uppercase;
+            border-radius: 50px; 
+            box-shadow: 0 4px 0 var(--green-shadow);
+        }
+        .link-item:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 var(--green-shadow);
+        }
+
         .alert-input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 2px solid #c23616; outline: none; font-size: 14px; }
 
         .live-popup-alert {
@@ -252,19 +272,21 @@
     <button onclick="stopEmergencyEffects()" style="width: 100%; padding: 12px; background: #2ecc71; color: white; border: none; border-radius: 50px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 0 #27ae60;">🛑 ACKNOWLEDGE & STOP SIREN</button>
 </div>
 
+<!-- 🌐 क्विक लिंक्स पॉप-अप: लिंक्स अब सुंदर हरे बटन्स में हैं -->
 <div id="quickLinksModal" class="modal">
     <div class="modal-content">
-        <h2 style="text-align:center; margin-top:0;">🌐 Quick Links</h2><hr>
-        <a href="https://wmdppolicekhoj.co.in/" target="_blank" class="link-item">Khoj (Police Dept)</a>
-        <button onclick="toggleModal('quickLinksModal')" style="width:100%; padding:12px; background:#d32f2f; color:white; border:none; border-radius:50px; margin-top:15px; font-weight:bold;">CLOSE</button>
+        <h2 style="text-align:center; margin-top:0; color: var(--police-blue);">🌐 Quick Links</h2><hr>
+        <a href="https://wmdppolicekhoj.co.in/" target="_blank" class="link-item">🌐 Khoj (Police Dept)</a>
+        <button onclick="toggleModal('quickLinksModal')" style="width:100%; padding:12px; background:#d32f2f; color:white; border:none; border-radius:50px; margin-top:15px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 0 #9a1f1f;">CLOSE</button>
     </div>
 </div>
 
+<!-- 📌 इम्पोर्टेन्ट साइट्स पॉप-अप: लिंक्स अब सुंदर हरे बटन्स में हैं -->
 <div id="importantLinksModal" class="modal">
     <div class="modal-content">
-        <h2 style="text-align:center; margin-top:0;">📌 Important Sites</h2><hr>
-        <a href="https://westbengalpolice.gov.in/" target="_blank" class="link-item">West Bengal Police</a>
-        <button onclick="toggleModal('importantLinksModal')" style="width:100%; padding:12px; background:#d32f2f; color:white; border:none; border-radius:50px; margin-top:15px; font-weight:bold;">CLOSE</button>
+        <h2 style="text-align:center; margin-top:0; color: var(--police-blue);">📌 Important Sites</h2><hr>
+        <a href="https://westbengalpolice.gov.in/" target="_blank" class="link-item">🚨 West Bengal Police</a>
+        <button onclick="toggleModal('importantLinksModal')" style="width:100%; padding:12px; background:#d32f2f; color:white; border:none; border-radius:50px; margin-top:15px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 0 #9a1f1f;">CLOSE</button>
     </div>
 </div>
 
@@ -489,7 +511,6 @@
         return `${hrs}h:${mins}m:${secs}s`;
     }
 
-    // 🎯 फिक्स: बिना एरर के गूगल शीट के शुद्ध डेटा को पार्स और लोड करने वाला मजबूत फंक्शन
     function loadGoogleSheetDirectly() {
         const url = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=csv&gid=0&v=` + Date.now();
         fetch(url)
@@ -513,7 +534,7 @@
                 if(!lines[i].trim()) continue;
                 let cols = lines[i].split(',').map(c => c.trim().replace(/^["']|["']$/g, ""));
                 let pName = nameIdx !== -1 && cols[nameIdx] ? cols[nameIdx].trim() : 'N/A';
-                if(pName === 'N/A' || pName === '') continue; // अगर नाम नहीं है तो छोड़ें
+                if(pName === 'N/A' || pName === '') continue; 
                 
                 let savedStatus = localStorage.getItem(`status_${pName}`) || (statusIdx !== -1 && cols[statusIdx] ? cols[statusIdx].trim() : 'Off-Duty');
                 let savedPost = localStorage.getItem(`post_${pName}`) || (postIdx !== -1 && cols[postIdx] ? cols[postIdx].trim() : 'N/A');
@@ -546,7 +567,7 @@
                     summary: savedSummary
                 });
             }
-            buildDynamicUI(); // UI बिल्डर को फायर करें
+            buildDynamicUI(); 
         }).catch(err => console.error("गूगल शीट लोड एरर: ", err));
     }
 
