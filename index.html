@@ -389,13 +389,16 @@
 
 <script>
     const GOOGLE_SHEET_ID = "1dQW0F83Sn9hCOqVRSkIvtReOu31oh9tM0dF6cSNfyl0"; 
+    
+    // 🎯 आपका लाइव गूगल क्लाउड सिंक यूआरएल सफलतापूर्वक लिंक कर दिया गया है!
+    const CLOUD_SYNC_URL = "https://script.google.com/macros/s/AKfycbym5E-8IUz4QVX1HvYkgkZbB60_fQatSUc4TUF4lf14ufRWHIRcVSBiuaZq7mxjgnZXwA/exec"; 
 
     let rawDataList = []; 
     let activeDutyUser = null; 
     let globalSirenAudio = null;
     let vibrationInterval = null;
     let pollInterval = null;
-    let dataSyncInterval = null; 
+    let cloudFetchInterval = null;
 
     let shopData = {
         "asp": { title: "ASP", partners: [] },
@@ -430,35 +433,34 @@
 
         startLiveWidgetClock();
         startBackgroundAlertPoller();
-        startRealtimeDataSyncEngine();
+        startCloudNetworkSyncEngine();
     };
 
-    function startRealtimeDataSyncEngine() {
-        if(dataSyncInterval) clearInterval(dataSyncInterval);
-        dataSyncInterval = setInterval(() => {
-            let sharedNetworkStore = localStorage.getItem('global_police_network_attendance_store');
-            if (sharedNetworkStore && rawDataList.length > 0) {
-                let liveNetworkData = JSON.parse(sharedNetworkStore);
-                let isUpdated = false;
-
-                rawDataList.forEach(p => {
-                    if (liveNetworkData[p.name]) {
-                        let netObj = liveNetworkData[p.name];
-                        if (p.status !== netObj.status || p.duty_post !== netObj.duty_post || p.in_time !== netObj.in_time) {
-                            p.status = netObj.status;
-                            p.duty_post = netObj.duty_post;
-                            p.in_time = netObj.in_time;
-                            p.in_gps = netObj.in_gps;
-                            p.summary = netObj.summary;
-                            isUpdated = true;
+    function startCloudNetworkSyncEngine() {
+        if(cloudFetchInterval) clearInterval(cloudFetchInterval);
+        cloudFetchInterval = setInterval(() => {
+            if(!CLOUD_SYNC_URL || CLOUD_SYNC_URL.includes("YOUR_URL_HERE")) return;
+            fetch(CLOUD_SYNC_URL)
+            .then(res => res.json())
+            .then(cloudData => {
+                if(cloudData && Object.keys(cloudData).length > 0 && rawDataList.length > 0) {
+                    let isChanged = false;
+                    rawDataList.forEach(p => {
+                        if(cloudData[p.name]) {
+                            let item = cloudData[p.name];
+                            if(p.status !== item.status || p.duty_post !== item.post || p.in_time !== item.time) {
+                                p.status = item.status;
+                                p.duty_post = item.post;
+                                p.in_time = item.time;
+                                p.in_gps = item.gps;
+                                p.summary = item.summary || p.summary;
+                                isChanged = true;
+                            }
                         }
-                    }
-                });
-
-                if (isUpdated) {
-                    buildDynamicUI(); 
+                    });
+                    if(isChanged) buildDynamicUI();
                 }
-            }
+            }).catch(e => console.log("Sync active..."));
         }, 5000);
     }
 
@@ -560,7 +562,7 @@
             let alertData = JSON.parse(activeCloudAlert);
             localStorage.setItem('last_acknowledged_alert_id', alertData.alertId);
         }
-        alert("Adjacent Alert successfully acknowledged.");
+        alert("✅ Alert successfully acknowledged.");
     }
 
     function startLiveWidgetClock() {
@@ -593,22 +595,6 @@
         return `${dateObj.toLocaleDateString('en-GB', dateOptions)} | ${dateObj.toLocaleTimeString('en-US', timeOptions)}`;
     }
 
-    function updateSharedNetworkStore(pName, status, post, time, gps, summary) {
-        let sharedNetworkStore = localStorage.getItem('global_police_network_attendance_store') || "{}";
-        let liveNetworkData = JSON.parse(sharedNetworkStore);
-        
-        liveNetworkData[pName] = {
-            status: status,
-            duty_post: post,
-            in_time: time,
-            in_gps: gps,
-            summary: summary,
-            lastUpdated: Date.now()
-        };
-        
-        localStorage.setItem('global_police_network_attendance_store', JSON.stringify(liveNetworkData));
-    }
-
     function parseSecondsToHMS(totalSeconds) {
         let hrs = Math.floor(totalSeconds / 3600);
         let mins = Math.floor((totalSeconds % 3600) / 60);
@@ -616,7 +602,6 @@
         return `${hrs}h:${mins}m:${secs}s`;
     }
 
-    // 🎯 फिक्स: बिना किसी रुकावट के एक्सेल शीट से 100% डेटा लोड करने वाला शुद्ध री-राइट फंक्शन
     function loadGoogleSheetDirectly() {
         const url = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=csv&gid=0&v=` + Date.now();
         fetch(url)
@@ -634,31 +619,17 @@
             let inGpsIdx = headers.indexOf('in_gps'), outGpsIdx = headers.indexOf('out_gps'), summaryIdx = headers.indexOf('summary');
 
             rawDataList = []; 
-            let sharedNetworkStore = localStorage.getItem('global_police_network_attendance_store') || "{}";
-            let liveNetworkData = JSON.parse(sharedNetworkStore);
-
             for(let i = 1; i < lines.length; i++) {
                 if(!lines[i].trim()) continue;
                 let cols = lines[i].split(',').map(c => c.trim().replace(/^["']|["']$/g, ""));
                 let pName = nameIdx !== -1 && cols[nameIdx] ? cols[nameIdx].trim() : 'N/A';
                 if(pName === 'N/A' || pName === '') continue; 
-
-                // डिफ़ॉल्ट रूप से पहले एक्सेल का मूल डेटा लोड करें
-                let savedStatus = (statusIdx !== -1 && cols[statusIdx]) ? cols[statusIdx].trim() : 'Off-Duty';
-                let savedPost = (postIdx !== -1 && cols[postIdx]) ? cols[postIdx].trim() : 'N/A';
-                let savedInTime = (inTimeIdx !== -1 && cols[inTimeIdx]) ? cols[inTimeIdx].trim() : '';
-                let savedInGps = (inGpsIdx !== -1 && cols[inGpsIdx]) ? cols[inGpsIdx].trim() : '';
-                let savedSummary = (summaryIdx !== -1 && cols[summaryIdx]) ? cols[summaryIdx].trim() : 'P:0 | A:0 | Hrs:0s';
-
-                // अगर क्लाउड स्टोर में लाइव अपडेट उपलब्ध है तो उसे प्राथमिकता दें
-                if (liveNetworkData[pName]) {
-                    let netObj = liveNetworkData[pName];
-                    savedStatus = netObj.status;
-                    savedPost = netObj.duty_post;
-                    savedInTime = netObj.in_time;
-                    savedInGps = netObj.in_gps;
-                    savedSummary = netObj.summary;
-                }
+                
+                let savedStatus = localStorage.getItem(`status_${pName}`) || (statusIdx !== -1 && cols[statusIdx] ? cols[statusIdx].trim() : 'Off-Duty');
+                let savedPost = localStorage.getItem(`post_${pName}`) || (postIdx !== -1 && cols[postIdx] ? cols[postIdx].trim() : 'N/A');
+                let savedInTime = localStorage.getItem(`inTime_${pName}`) || (inTimeIdx !== -1 && cols[inTimeIdx] ? cols[inTimeIdx].trim() : '');
+                let savedInGps = localStorage.getItem(`inGps_${pName}`) || (inGpsIdx !== -1 && cols[inGpsIdx] ? cols[inGpsIdx].trim() : '');
+                let savedSummary = localStorage.getItem(`summary_${pName}`) || (summaryIdx !== -1 && cols[summaryIdx] ? cols[summaryIdx].trim() : 'P:0 | A:0 | Hrs:0s');
 
                 if (savedStatus !== 'On-Duty') {
                     savedStatus = 'Off-Duty';
@@ -668,22 +639,17 @@
                     type: typeIdx !== -1 && cols[typeIdx] ? cols[typeIdx].trim().toLowerCase() : '',
                     ps_name: psNameIdx !== -1 && cols[psNameIdx] ? cols[psNameIdx].trim() : '',
                     force_type: forceTypeIdx !== -1 && cols[forceTypeIdx] ? cols[forceTypeIdx].trim() : 'Officer',
-                    name: pName, 
-                    rank: rankIdx !== -1 && cols[rankIdx] ? cols[rankIdx].trim() : 'N/A',
+                    name: pName, rank: rankIdx !== -1 && cols[rankIdx] ? cols[rankIdx].trim() : 'N/A',
                     mobile: mobileIdx !== -1 && cols[mobileIdx] ? cols[mobileIdx].trim() : 'N/A',
                     landline: landlineIdx !== -1 && cols[landlineIdx] ? cols[landlineIdx].trim() : '',
                     whatsapp: whatsappIdx !== -1 && cols[whatsappIdx] ? cols[whatsappIdx].trim() : '',
-                    status: savedStatus, 
-                    duty_post: savedPost, 
-                    in_time: savedInTime, 
-                    out_time: outTimeIdx !== -1 && cols[outTimeIdx] ? cols[outTimeIdx].trim() : '',
-                    in_gps: savedInGps, 
-                    out_gps: outGpsIdx !== -1 && cols[outGpsIdx] ? cols[outGpsIdx].trim() : '',
+                    status: savedStatus, duty_post: savedPost, in_time: savedInTime, out_time: outTimeIdx !== -1 && cols[outTimeIdx] ? cols[outTimeIdx].trim() : '',
+                    in_gps: savedInGps, out_gps: outGpsIdx !== -1 && cols[outGpsIdx] ? cols[outGpsIdx].trim() : '',
                     summary: savedSummary
                 });
             }
             buildDynamicUI(); 
-        }).catch(err => console.error("Error loading Sheet data: ", err));
+        }).catch(err => console.error(err));
     }
 
     function handleDutyAction(actionType) {
@@ -704,8 +670,6 @@
             let nameInput = document.getElementById('dutyUserName').value.trim();
             let postInput = document.getElementById('dutyPostName').value.trim();
             if (!nameInput || !postInput) { alert("Please fill both Name and Duty Location fields!"); statusField.innerText = ""; return; }
-            
-            // 🎯 नाम खोजने के लिए पूरी लिस्ट का मिलान सुनिश्चित करें
             let matchedUser = rawDataList.find(u => u.name.toLowerCase().includes(nameInput.toLowerCase()));
             if (!matchedUser) { alert("⚠️ Entered name not found in database records."); statusField.innerText = ""; return; }
 
@@ -725,7 +689,13 @@
             localStorage.setItem(`inTime_${uName}`, currentDateTime); localStorage.setItem(`inGps_${uName}`, gpsOutput);
             localStorage.setItem(`summary_${uName}`, matchedUser.summary); localStorage.setItem(`lastJoinDate_${uName}`, currentDateOnly); 
 
-            updateSharedNetworkStore(uName, "On-Duty", postInput, currentDateTime, gpsOutput, matchedUser.summary);
+            if(CLOUD_SYNC_URL && !CLOUD_SYNC_URL.includes("YOUR_URL_HERE")) {
+                fetch(CLOUD_SYNC_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify({ name: uName, status: "On-Duty", post: postInput, time: currentDateTime, gps: gpsOutput, summary: matchedUser.summary })
+                });
+            }
 
             activeDutyUser = matchedUser.name; localStorage.setItem('activeDutyUser', matchedUser.name);
             document.getElementById('dutyFormArea').style.display = "none"; document.getElementById('leaveFormArea').style.display = "block";
@@ -747,7 +717,13 @@
                 localStorage.setItem(`outGps_${uName}`, gpsOutput); localStorage.setItem(`summary_${uName}`, matchedUser.summary);
                 localStorage.removeItem(`timestamp_join_${uName}`);
                 
-                updateSharedNetworkStore(uName, "Off-Duty", "N/A", currentDateTime, gpsOutput, matchedUser.summary);
+                if(CLOUD_SYNC_URL && !CLOUD_SYNC_URL.includes("YOUR_URL_HERE")) {
+                    fetch(CLOUD_SYNC_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        body: JSON.stringify({ name: uName, status: "Off-Duty", post: "N/A", time: currentDateTime, gps: gpsOutput, summary: matchedUser.summary })
+                    });
+                }
             }
             localStorage.removeItem('activeDutyUser'); activeDutyUser = null;
             document.getElementById('dutyFormArea').style.display = "block"; document.getElementById('leaveFormArea').style.display = "none";
