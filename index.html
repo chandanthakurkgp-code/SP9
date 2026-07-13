@@ -390,7 +390,7 @@
 <script>
     const GOOGLE_SHEET_ID = "1dQW0F83Sn9hCOqVRSkIvtReOu31oh9tM0dF6cSNfyl0"; 
     
-    // 🎯 आपका लाइव गूगल क्लाउड सिंक यूआरएल सफलतापूर्वक लिंक कर दिया गया है!
+    // 🎯 आपका लाइव गूगल क्लाउड सिंक यूआरएल परफेक्टली लॉक्ड है!
     const CLOUD_SYNC_URL = "https://script.google.com/macros/s/AKfycbym5E-8IUz4QVX1HvYkgkZbB60_fQatSUc4TUF4lf14ufRWHIRcVSBiuaZq7mxjgnZXwA/exec"; 
 
     let rawDataList = []; 
@@ -732,20 +732,6 @@
         }
         statusField.innerText = "✅ Data saved successfully to permanent storage.";
         buildDynamicUI(); 
-    }
-
-    function downloadMonthlyCSVReport() {
-        if(rawDataList.length === 0) return alert("No data found!");
-        let csvContent = "data:text/csv;charset=utf-8,Name,Rank,Police Station,Force Type,Current Status,Duty Post,Join Time (IST),Leave Time (IST),Join GPS,Leave GPS,Attendance Summary (P|A|Hrs)\n";
-        rawDataList.forEach(p => {
-            let summaryParts = p.summary.split('|').map(x => x.trim());
-            let totalSeconds = parseInt(summaryParts[2].split(':')[1]) || 0;
-            let readableSummary = `${summaryParts[0]} | ${summaryParts[1]} | Hrs:${parseSecondsToHMS(totalSeconds)}`;
-            csvContent += [`"${p.name}"`,`"${p.rank}"`,`"${p.ps_name}"`,`"${p.force_type}"`,`"${p.status}"`,`"${p.duty_post}"`,`"${p.in_time}"`,`"${p.out_time}"`,`"${p.in_gps}"`,`"${p.out_gps}"`,`"${readableSummary}"`].join(",") + "\n";
-        });
-        const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent));
-        link.setAttribute("download", `Police_Monthly_Report_${new Date().toLocaleDateString('en-GB').replace(/\//g, "-")}.csv`);
-        document.body.appendChild(link); link.click(); document.body.removeChild(link);
     }
 
     function buildDynamicUI() {
