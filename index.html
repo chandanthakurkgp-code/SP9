@@ -619,6 +619,10 @@
             let empIdIdx = headers.indexOf('employee_id');
             if(empIdIdx === -1) empIdIdx = headers.indexOf('id');
 
+            // 🆕 ईमेल और ब्लड ग्रुप रीड करने के लिए इंडेक्स खोजना
+            let emailIdx = headers.indexOf('email');
+            let bgIdx = headers.indexOf('blood_group');
+
             rawDataList = []; 
             for(let i = 1; i < lines.length; i++) {
                 if(!lines[i].trim()) continue;
@@ -647,7 +651,9 @@
                     status: savedStatus, duty_post: savedPost, in_time: savedInTime, out_time: outTimeIdx !== -1 && cols[outTimeIdx] ? cols[outTimeIdx].trim() : '',
                     in_gps: savedInGps, out_gps: outGpsIdx !== -1 && cols[outGpsIdx] ? cols[outGpsIdx].trim() : '',
                     summary: savedSummary,
-                    employee_id: empIdIdx !== -1 && cols[empIdIdx] ? cols[empIdIdx].trim() : 'N/A'
+                    employee_id: empIdIdx !== -1 && cols[empIdIdx] ? cols[empIdIdx].trim() : 'N/A',
+                    email: emailIdx !== -1 && cols[emailIdx] ? cols[emailIdx].trim() : 'N/A', // 🆕 स्टोर ईमेल
+                    blood_group: bgIdx !== -1 && cols[bgIdx] ? cols[bgIdx].trim() : 'N/A'    // 🆕 स्टोर ब्लड ग्रुप
                 });
             }
             buildDynamicUI(); 
@@ -841,8 +847,8 @@
             displaySummary = `P:${pCount} | A:${aCount} | Hrs:${formattedTimeLive}`;
         }
         
-        // 🆕 कर्मचारी आईडी को नाम से हटाकर रैंक के ठीक नीचे शिफ्ट कर दिया गया है
-        return `<div class="list-card"><span class="status-badge ${badgeClass}">${badgeText}</span><h3 style="color:var(--police-blue); margin-top:0; font-weight:900; font-size: 20px; padding-right: 90px;">${p.name || 'N/A'}</h3><p>🎖️ <b>Rank:</b> ${p.rank || 'N/A'} (${forceType})</p><p>🆔 <b>Employee ID:</b> ${p.employee_id || 'N/A'}</p><p>🏢 <b>Station:</b> ${p.ps_name || 'N/A'}</p><p>📞 <b>Mobile:</b> ${p.mobile || 'N/A'}</p>${trackingDetails}<p style="background:#f1f2f6; padding:5px 10px; border-radius:10px; font-size:12px; font-weight:bold; color:#2f3542;">📊 <b>Attendance Record:</b> ${displaySummary}</p><div class="btn-group"><a href="tel:${p.mobile}" class="action-btn">📞 CALL</a>${p.landline ? `<a href="tel:${p.landline}" class="action-btn">☎️ LANDLINE</a>` : ""}<a href="https://wa.me/${p.whatsapp}" class="action-btn">💬 WHATSAPP</a></div></div>`;
+        // 🆕 Employee ID के नीचे Email ID और उसके नीचे Blood Group रेंडर किया गया है
+        return `<div class="list-card"><span class="status-badge ${badgeClass}">${badgeText}</span><h3 style="color:var(--police-blue); margin-top:0; font-weight:900; font-size: 20px; padding-right: 90px;">${p.name || 'N/A'}</h3><p>🎖️ <b>Rank:</b> ${p.rank || 'N/A'} (${forceType})</p><p>🆔 <b>Employee ID:</b> ${p.employee_id || 'N/A'}</p><p>📧 <b>Email ID:</b> ${p.email || 'N/A'}</p><p>🩸 <b>Blood Group:</b> ${p.blood_group || 'N/A'}</p><p>🏢 <b>Station:</b> ${p.ps_name || 'N/A'}</p><p>📞 <b>Mobile:</b> ${p.mobile || 'N/A'}</p>${trackingDetails}<p style="background:#f1f2f6; padding:5px 10px; border-radius:10px; font-size:12px; font-weight:bold; color:#2f3542;">📊 <b>Attendance Record:</b> ${displaySummary}</p><div class="btn-group"><a href="tel:${p.mobile}" class="action-btn">📞 CALL</a>${p.landline ? `<a href="tel:${p.landline}" class="action-btn">☎️ LANDLINE</a>` : ""}<a href="https://wa.me/${p.whatsapp}" class="action-btn">💬 WHATSAPP</a></div></div>`;
     }
 
     function toggleNightMode() { document.body.classList.toggle('night-mode'); localStorage.setItem('theme', document.body.classList.contains('night-mode') ? 'night' : 'light'); updateModeButton(document.body.classList.contains('night-mode')); }
