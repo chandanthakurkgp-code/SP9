@@ -389,8 +389,6 @@
 
 <script>
     const GOOGLE_SHEET_ID = "1dQW0F83Sn9hCOqVRSkIvtReOu31oh9tM0dF6cSNfyl0"; 
-    
-    // 🎯 आपका लाइव गूगल क्लाउड सिंक यूआरएल परफेक्टली लॉक्ड है!
     const CLOUD_SYNC_URL = "https://script.google.com/macros/s/AKfycbym5E-8IUz4QVX1HvYkgkZbB60_fQatSUc4TUF4lf14ufRWHIRcVSBiuaZq7mxjgnZXwA/exec"; 
 
     let rawDataList = []; 
@@ -802,7 +800,7 @@
         let lastJoinDate = localStorage.getItem(`lastJoinDate_${p.name}`) || '';
         let displaySummary = "";
         
-        if (statusClean !== 'on-duty' && lastJoinDate !== currentDayOnly) {
+        if (statusClean !== 'on-duty' && lastJoinDate !== '' && lastJoinDate !== currentDayOnly) {
             let pCount = parseInt(summaryParts[0].split(':')[1]) || 0;
             let aCount = (parseInt(summaryParts[1].split(':')[1]) || 0) + 1; 
             displaySummary = `P:${pCount} | A:${aCount} | Hrs:${formattedTimeLive}`;
