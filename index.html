@@ -615,6 +615,10 @@
             let landlineIdx = headers.indexOf('landline'), whatsappIdx = headers.indexOf('whatsapp'), statusIdx = headers.indexOf('status');
             let postIdx = headers.indexOf('duty_post'), inTimeIdx = headers.indexOf('in_time'), outTimeIdx = headers.indexOf('out_time');
             let inGpsIdx = headers.indexOf('in_gps'), outGpsIdx = headers.indexOf('out_gps'), summaryIdx = headers.indexOf('summary');
+            
+            // 🆕 गूगल शीट से कर्मचारी आईडी रीड करने के लिए कॉलम इंडेक्स खोजना
+            let empIdIdx = headers.indexOf('employee_id');
+            if(empIdIdx === -1) empIdIdx = headers.indexOf('id');
 
             rawDataList = []; 
             for(let i = 1; i < lines.length; i++) {
@@ -643,7 +647,8 @@
                     whatsapp: whatsappIdx !== -1 && cols[whatsappIdx] ? cols[whatsappIdx].trim() : '',
                     status: savedStatus, duty_post: savedPost, in_time: savedInTime, out_time: outTimeIdx !== -1 && cols[outTimeIdx] ? cols[outTimeIdx].trim() : '',
                     in_gps: savedInGps, out_gps: outGpsIdx !== -1 && cols[outGpsIdx] ? cols[outGpsIdx].trim() : '',
-                    summary: savedSummary
+                    summary: savedSummary,
+                    employee_id: empIdIdx !== -1 && cols[empIdIdx] ? cols[empIdIdx].trim() : 'N/A' // 🆕 रो ऑब्जेक्ट में स्टोर करना
                 });
             }
             buildDynamicUI(); 
@@ -735,7 +740,6 @@
     function buildDynamicUI() {
         Object.keys(shopData).forEach(key => shopData[key].partners = []);
         
-        // 🔒 रैंक आधारित पीएस फ़िल्टर लॉजिक लागू करना
         let userPsFilter = null;
         let isRestrictedUser = false;
         
@@ -746,7 +750,6 @@
                 let typeClean = logUser.type.toLowerCase().trim();
                 let forceTypeClean = logUser.force_type.toLowerCase().trim();
                 
-                // चेक करें कि क्या लॉग इन यूजर IC/OC से CV के बीच की रैंक का है
                 if (typeClean === "police_stations" || rankClean.includes("ic") || rankClean.includes("oc") || 
                     forceTypeClean.includes("si") || forceTypeClean.includes("asi") || 
                     forceTypeClean.includes("constable") || forceTypeClean.includes("nvf") || 
@@ -761,9 +764,8 @@
         rawDataList.forEach(obj => {
             if(!obj.type) return;
             
-            // अगर यूजर प्रतिबंधित रैंक (IC to CV) का है, तो सिर्फ उसके ही PS का डेटा दिखेगा। ASP to CI को सब दिखेगा।
             if (isRestrictedUser && obj.ps_name && userPsFilter && obj.ps_name.toLowerCase().trim() !== userPsFilter.toLowerCase().trim()) {
-                return; // दूसरे थानों का डेटा स्किप करें
+                return; 
             }
 
             if (obj.type === "police_stations") {
@@ -840,7 +842,8 @@
             displaySummary = `P:${pCount} | A:${aCount} | Hrs:${formattedTimeLive}`;
         }
         
-        return `<div class="list-card"><span class="status-badge ${badgeClass}">${badgeText}</span><h3 style="color:var(--police-blue); margin-top:0; font-weight:900; font-size: 20px; padding-right: 90px;">${p.name || 'N/A'}</h3><p>🎖️ <b>Rank:</b> ${p.rank || 'N/A'} (${forceType})</p><p>🏢 <b>Station:</b> ${p.ps_name || 'N/A'}</p><p>📞 <b>Mobile:</b> ${p.mobile || 'N/A'}</p>${trackingDetails}<p style="background:#f1f2f6; padding:5px 10px; border-radius:10px; font-size:12px; font-weight:bold; color:#2f3542;">📊 <b>Attendance Record:</b> ${displaySummary}</p><div class="btn-group"><a href="tel:${p.mobile}" class="action-btn">📞 CALL</a>${p.landline ? `<a href="tel:${p.landline}" class="action-btn">☎️ LANDLINE</a>` : ""}<a href="https://wa.me/${p.whatsapp}" class="action-btn">💬 WHATSAPP</a></div></div>`;
+        // 🆕 यूआई कार्ड के अंदर एम्प्लोयी आईडी प्रदर्शित करना
+        return `<div class="list-card"><span class="status-badge ${badgeClass}">${badgeText}</span><h3 style="color:var(--police-blue); margin-top:0; font-weight:900; font-size: 20px; padding-right: 90px;">${p.name || 'N/A'}</h3><p>🆔 <b>Employee ID:</b> ${p.employee_id || 'N/A'}</p><p>🎖️ <b>Rank:</b> ${p.rank || 'N/A'} (${forceType})</p><p>🏢 <b>Station:</b> ${p.ps_name || 'N/A'}</p><p>📞 <b>Mobile:</b> ${p.mobile || 'N/A'}</p>${trackingDetails}<p style="background:#f1f2f6; padding:5px 10px; border-radius:10px; font-size:12px; font-weight:bold; color:#2f3542;">📊 <b>Attendance Record:</b> ${displaySummary}</p><div class="btn-group"><a href="tel:${p.mobile}" class="action-btn">📞 CALL</a>${p.landline ? `<a href="tel:${p.landline}" class="action-btn">☎️ LANDLINE</a>` : ""}<a href="https://wa.me/${p.whatsapp}" class="action-btn">💬 WHATSAPP</a></div></div>`;
     }
 
     function toggleNightMode() { document.body.classList.toggle('night-mode'); localStorage.setItem('theme', document.body.classList.contains('night-mode') ? 'night' : 'light'); updateModeButton(document.body.classList.contains('night-mode')); }
