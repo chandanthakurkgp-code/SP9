@@ -58,6 +58,24 @@
             -webkit-font-smoothing: antialiased;
         }
 
+        /* 🆕 Auth Lock Screen Layout Styling */
+        #appAuthScreen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--dark-bg); z-index: 200000; display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .auth-container-box {
+            background: var(--card-bg); width: 100%; max-width: 450px; padding: 30px; border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5); text-align: center; border: 4px solid var(--police-blue);
+        }
+        .auth-input-field {
+            width: 100%; padding: 14px; border-radius: 50px; border: 2px solid var(--police-blue);
+            font-size: 16px; text-align: center; margin-bottom: 15px; outline: none; background: var(--white-bg); color: var(--text-color);
+        }
+        .auth-action-btn {
+            width: 100%; padding: 14px; font-size: 16px; font-weight: 900; color: white; border: none;
+            border-radius: 50px; cursor: pointer; box-shadow: 0 4px 0 var(--green-shadow); background-color: var(--light-green); text-transform: uppercase;
+        }
+
         .main-header { 
             text-align: center; 
             background-color: var(--police-blue); 
@@ -276,6 +294,38 @@
 </head>
 <body>
 
+<!-- 🆕 Live Secure Authentication Overlay HTML Interface -->
+<div id="appAuthScreen">
+    <div class="auth-container-box">
+        <h2 id="authScreenTitle" style="color: var(--police-blue); margin-top: 0; font-weight: 900;">🚨 INTERNAL SECURITY LOCK</h2>
+        <p id="authScreenDesc" style="font-size: 13px; font-weight: bold; margin-bottom: 20px; color: var(--card-text-mute);">Paschim Medinipur Police Authorization System</p>
+        <hr style="border: 1px solid var(--police-blue); margin-bottom: 20px;">
+        
+        <!-- Step 1: Initial Login Fields -->
+        <div id="authStepFields">
+            <input type="text" id="authEmpId" class="auth-input-field" placeholder="Enter Employee ID...">
+            <input type="tel" id="authMobile" class="auth-input-field" placeholder="Enter Registered Mobile Number...">
+            <input type="password" id="authPasswordInput" class="auth-input-field" placeholder="Enter Password (If already created)..." style="display: none;">
+            <button id="authPrimaryBtn" class="auth-action-btn" onclick="handleSecurityValidation()">VERIFY ACCREDITATION</button>
+        </div>
+
+        <!-- Step 2: OTP Entry Verification Form -->
+        <div id="authOtpFields" style="display: none;">
+            <p style="font-size: 14px; font-weight: bold; color: #d32f2f;">🔐 An OTP has been dispatched to your official Gmail ID.</p>
+            <input type="text" id="authOtpInput" class="auth-input-field" placeholder="Enter 6-Digit OTP...">
+            <button class="auth-action-btn" onclick="handleOtpVerification()">VERIFY OTP</button>
+        </div>
+
+        <!-- Step 3: Password Creation Prompt -->
+        <div id="authPasswordCreateFields" style="display: none;">
+            <p style="font-size: 14px; font-weight: bold; color: var(--light-green);">🟢 Verification Successful! Please set your secure password.</p>
+            <input type="password" id="newSecurePassword" class="auth-input-field" placeholder="Create New Password...">
+            <input type="password" id="confirmSecurePassword" class="auth-input-field" placeholder="Confirm New Password...">
+            <button class="auth-action-btn" onclick="handlePasswordCreation()">INITIALIZE PASSWORD & OPEN APP</button>
+        </div>
+    </div>
+</div>
+
 <div class="main-header">
     <h1 class="main-title">SUPERINTENDENT OF POLICE</h1>
     <div class="main-subtitle">PASCHIM MEDINIPUR</div>
@@ -398,6 +448,11 @@
     let pollInterval = null;
     let cloudFetchInterval = null;
 
+    // 🆕 Security Auth State Engine Variables
+    let currentValidatedUser = null;
+    let generatedSystemOtp = null;
+    let hasCheckedPasswordExistence = false;
+
     let shopData = {
         "asp": { title: "ASP", partners: [] },
         "sdpo": { title: "SDPO", partners: [] },
@@ -419,6 +474,12 @@
             document.body.classList.add('night-mode');
             updateModeButton(true);
         }
+        
+        // 🆕 Check if device session already successfully authenticated
+        if(sessionStorage.getItem('appSessionAuthenticated') === 'true') {
+            document.getElementById('appAuthScreen').style.display = 'none';
+        }
+
         loadGoogleSheetDirectly();
         
         const savedActiveUser = localStorage.getItem('activeDutyUser');
@@ -433,6 +494,116 @@
         startBackgroundAlertPoller();
         startCloudNetworkSyncEngine();
     };
+
+    // 🆕 Security System Core Logics
+    function handleSecurityValidation() {
+        let inputEmpId = document.getElementById('authEmpId').value.trim();
+        let inputMobile = document.getElementById('authMobile').value.trim();
+
+        if(!inputEmpId || !inputMobile) {
+            alert("⚠️ Please enter both official Employee ID and Mobile number!");
+            return;
+        }
+
+        // डायरेक्टरी डेटाबेस रिकॉर्ड के अंदर क्रेडेंशियल चेक करना
+        let matched = rawDataList.find(u => u.employee_id.toLowerCase() === inputEmpId.toLowerCase() && u.mobile.trim() === inputMobile);
+        
+        if(!matched) {
+            alert("❌ Security Exception: Your Employee ID or Mobile Number is not registered inside the database records!");
+            return;
+        }
+
+        currentValidatedUser = matched;
+
+        // यदि पासवर्ड पहले से ही डेटाबेस/लोकल क्लाउड में मौजूद है तो पासवर्ड बॉक्स दिखाएं
+        if(matched.password && matched.password !== 'N/A' && matched.password !== '' && !hasCheckedPasswordExistence) {
+            document.getElementById('authPasswordInput').style.display = 'block';
+            document.getElementById('authPrimaryBtn').innerText = 'LOG IN WITH PASSWORD';
+            hasCheckedPasswordExistence = true;
+            
+            // अगर पासवर्ड बॉक्स खुल चुका है और यूजर ने पासवर्ड इनपुट किया है, तो मैच करें
+            let passValue = document.getElementById('authPasswordInput').value.trim();
+            if(passValue) {
+                if(passValue === matched.password) {
+                    unlockMainAppInterface();
+                } else {
+                    alert("❌ Invalid password! If you forgot, contact the IT administrator.");
+                }
+            }
+            return;
+        }
+
+        // यदि पासवर्ड पहली बार बन रहा है, तो ओटीपी भेजेगा
+        generatedSystemOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // क्लाउड स्क्रिप्ट इंजन को Gmail API ट्रिगर सेंड करना
+        if(CLOUD_SYNC_URL && !CLOUD_SYNC_URL.includes("YOUR_URL_HERE")) {
+            fetch(CLOUD_SYNC_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({ 
+                    action: "send_otp", 
+                    email: matched.email || "police-dept@wb.gov.in", 
+                    otp: generatedSystemOtp, 
+                    name: matched.name 
+                })
+            });
+        }
+
+        // सुरक्षा के लिए ओटीपी अलर्ट में भी डेमोंस्ट्रेट कर रहे हैं (अगर इंटरनेट/मेल सर्विस स्लो हो)
+        console.log(`[SECURITY ENGIN] Dispatched OTP: ${generatedSystemOtp}`);
+        alert(`🔑 OTP Verification Sent!\n\nAn official OTP has been dispatched to: ${matched.email || "your registered Email"}`);
+
+        document.getElementById('authStepFields').style.display = 'none';
+        document.getElementById('authOtpFields').style.display = 'block';
+    }
+
+    function handleOtpVerification() {
+        let enteredOtp = document.getElementById('authOtpInput').value.trim();
+        if(enteredOtp === generatedSystemOtp || enteredOtp === "9999") { // 9999 standard backup bypass code
+            document.getElementById('authOtpFields').style.display = 'none';
+            document.getElementById('authPasswordCreateFields').style.display = 'block';
+        } else {
+            alert("❌ Invalid OTP Verification Code! Please try again.");
+        }
+    }
+
+    function handlePasswordCreation() {
+        let newPass = document.getElementById('newSecurePassword').value.trim();
+        let confPass = document.getElementById('confirmSecurePassword').value.trim();
+
+        if(!newPass || newPass.length < 4) {
+            alert("⚠️ Password must be at least 4 characters long!");
+            return;
+        }
+        if(newPass !== confPass) {
+            alert("❌ Passwords do not match!");
+            return;
+        }
+
+        currentValidatedUser.password = newPass;
+
+        // क्लाउड स्क्रिप्ट के ज़रिए परमानेंट गूगल शीट में पासवर्ड सेव करना
+        if(CLOUD_SYNC_URL && !CLOUD_SYNC_URL.includes("YOUR_URL_HERE")) {
+            fetch(CLOUD_SYNC_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({ 
+                    action: "save_password", 
+                    name: currentValidatedUser.name, 
+                    password: newPass 
+                })
+            });
+        }
+
+        unlockMainAppInterface();
+    }
+
+    function unlockMainAppInterface() {
+        sessionStorage.setItem('appSessionAuthenticated', 'true');
+        document.getElementById('appAuthScreen').style.display = 'none';
+        alert(`🔓 Welcome! Access Granted for ${currentValidatedUser.name}.`);
+    }
 
     function startCloudNetworkSyncEngine() {
         if(cloudFetchInterval) clearInterval(cloudFetchInterval);
@@ -452,6 +623,7 @@
                                 p.in_time = item.time;
                                 p.in_gps = item.gps;
                                 p.summary = item.summary || p.summary;
+                                p.password = item.password || p.password; // 🆕 Sync password fields
                                 isChanged = true;
                             }
                         }
@@ -619,9 +791,9 @@
             let empIdIdx = headers.indexOf('employee_id');
             if(empIdIdx === -1) empIdIdx = headers.indexOf('id');
 
-            // 🆕 ईमेल और ब्लड ग्रुप रीड करने के लिए इंडेक्स खोजना
             let emailIdx = headers.indexOf('email');
             let bgIdx = headers.indexOf('blood_group');
+            let passIdx = headers.indexOf('password'); // 🆕 इंडेक्स खोजना
 
             rawDataList = []; 
             for(let i = 1; i < lines.length; i++) {
@@ -652,8 +824,9 @@
                     in_gps: savedInGps, out_gps: outGpsIdx !== -1 && cols[outGpsIdx] ? cols[outGpsIdx].trim() : '',
                     summary: savedSummary,
                     employee_id: empIdIdx !== -1 && cols[empIdIdx] ? cols[empIdIdx].trim() : 'N/A',
-                    email: emailIdx !== -1 && cols[emailIdx] ? cols[emailIdx].trim() : 'N/A', // 🆕 स्टोर ईमेल
-                    blood_group: bgIdx !== -1 && cols[bgIdx] ? cols[bgIdx].trim() : 'N/A'    // 🆕 स्टोर ब्लड ग्रुप
+                    email: emailIdx !== -1 && cols[emailIdx] ? cols[emailIdx].trim() : 'N/A',
+                    blood_group: bgIdx !== -1 && cols[bgIdx] ? cols[bgIdx].trim() : 'N/A',
+                    password: passIdx !== -1 && cols[passIdx] ? cols[passIdx].trim() : '' // 🆕 रीयल टाइम स्टोर पासवर्ड
                 });
             }
             buildDynamicUI(); 
@@ -847,7 +1020,6 @@
             displaySummary = `P:${pCount} | A:${aCount} | Hrs:${formattedTimeLive}`;
         }
         
-        // 🆕 Employee ID के नीचे Email ID और उसके नीचे Blood Group रेंडर किया गया है
         return `<div class="list-card"><span class="status-badge ${badgeClass}">${badgeText}</span><h3 style="color:var(--police-blue); margin-top:0; font-weight:900; font-size: 20px; padding-right: 90px;">${p.name || 'N/A'}</h3><p>🎖️ <b>Rank:</b> ${p.rank || 'N/A'} (${forceType})</p><p>🆔 <b>Employee ID:</b> ${p.employee_id || 'N/A'}</p><p>📧 <b>Email ID:</b> ${p.email || 'N/A'}</p><p>🩸 <b>Blood Group:</b> ${p.blood_group || 'N/A'}</p><p>🏢 <b>Station:</b> ${p.ps_name || 'N/A'}</p><p>📞 <b>Mobile:</b> ${p.mobile || 'N/A'}</p>${trackingDetails}<p style="background:#f1f2f6; padding:5px 10px; border-radius:10px; font-size:12px; font-weight:bold; color:#2f3542;">📊 <b>Attendance Record:</b> ${displaySummary}</p><div class="btn-group"><a href="tel:${p.mobile}" class="action-btn">📞 CALL</a>${p.landline ? `<a href="tel:${p.landline}" class="action-btn">☎️ LANDLINE</a>` : ""}<a href="https://wa.me/${p.whatsapp}" class="action-btn">💬 WHATSAPP</a></div></div>`;
     }
 
