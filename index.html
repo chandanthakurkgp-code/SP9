@@ -434,7 +434,6 @@
         startCloudNetworkSyncEngine();
     };
 
-    // [Code preserved intact as per instructions: startCloudNetworkSyncEngine, startBackgroundAlertPoller, triggerIncomingAlertUI, sendImmediateBroadcast, stopEmergencyEffects, startLiveWidgetClock, getIndianISTDateTime, parseSecondsToHMS...]
     function startCloudNetworkSyncEngine() {
         if(cloudFetchInterval) clearInterval(cloudFetchInterval);
         cloudFetchInterval = setInterval(() => {
@@ -712,7 +711,7 @@
                 if (joinTimestampStr) elapsedSeconds = Math.floor((Date.now() - parseInt(joinTimestampStr)) / 1000); 
                 
                 matchedUser.status = "Off-Duty"; matchedUser.out_time = currentDateTime; matchedUser.out_gps = gpsOutput;
-                let parts = matchedUser.summary.split('|').map(p => p.trim());
+                let parts = matchedUser.summary.split('|').map(x => x.trim());
                 let oldSeconds = parseInt(parts[2].split(':')[1]) || 0;
                 matchedUser.summary = `P:${parts[0].split(':')[1]} | A:${parts[1].split(':')[1]} | Hrs:${oldSeconds + elapsedSeconds}s`;
 
@@ -842,7 +841,6 @@
             displaySummary = `P:${pCount} | A:${aCount} | Hrs:${formattedTimeLive}`;
         }
         
-        // 🆕 एम्प्लोयी नाम के ठीक पहले ब्रैकेट में Employee ID जोड़ दी गई है
         return `<div class="list-card"><span class="status-badge ${badgeClass}">${badgeText}</span><h3 style="color:var(--police-blue); margin-top:0; font-weight:900; font-size: 20px; padding-right: 90px;">[${p.employee_id || 'N/A'}] ${p.name || 'N/A'}</h3><p>🎖️ <b>Rank:</b> ${p.rank || 'N/A'} (${forceType})</p><p>🏢 <b>Station:</b> ${p.ps_name || 'N/A'}</p><p>📞 <b>Mobile:</b> ${p.mobile || 'N/A'}</p>${trackingDetails}<p style="background:#f1f2f6; padding:5px 10px; border-radius:10px; font-size:12px; font-weight:bold; color:#2f3542;">📊 <b>Attendance Record:</b> ${displaySummary}</p><div class="btn-group"><a href="tel:${p.mobile}" class="action-btn">📞 CALL</a>${p.landline ? `<a href="tel:${p.landline}" class="action-btn">☎️ LANDLINE</a>` : ""}<a href="https://wa.me/${p.whatsapp}" class="action-btn">💬 WHATSAPP</a></div></div>`;
     }
 
