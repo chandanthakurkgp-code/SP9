@@ -58,7 +58,6 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* 🆕 Auth Lock Screen Layout Styling */
         #appAuthScreen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--dark-bg); z-index: 200000; display: flex; align-items: center; justify-content: center; padding: 20px;
@@ -294,34 +293,30 @@
 </head>
 <body>
 
-<!-- 🆕 Live Secure Authentication Overlay HTML Interface -->
 <div id="appAuthScreen">
     <div class="auth-container-box">
         <h2 id="authScreenTitle" style="color: var(--police-blue); margin-top: 0; font-weight: 900;">🚨 INTERNAL SECURITY LOCK</h2>
         <p id="authScreenDesc" style="font-size: 13px; font-weight: bold; margin-bottom: 20px; color: var(--card-text-mute);">Paschim Medinipur Police Authorization System</p>
         <hr style="border: 1px solid var(--police-blue); margin-bottom: 20px;">
         
-        <!-- Step 1: Initial Login Fields -->
         <div id="authStepFields">
             <input type="text" id="authEmpId" class="auth-input-field" placeholder="Enter Employee ID...">
             <input type="tel" id="authMobile" class="auth-input-field" placeholder="Enter Registered Mobile Number...">
-            <input type="password" id="authPasswordInput" class="auth-input-field" placeholder="Enter Password (If already created)..." style="display: none;">
+            <input type="password" id="authPasswordInput" class="auth-input-field" placeholder="Enter 4-Digit PIN (If created)..." maxlength="4" style="display: none;">
             <button id="authPrimaryBtn" class="auth-action-btn" onclick="handleSecurityValidation()">VERIFY ACCREDITATION</button>
         </div>
 
-        <!-- Step 2: OTP Entry Verification Form -->
         <div id="authOtpFields" style="display: none;">
             <p style="font-size: 14px; font-weight: bold; color: #d32f2f;">🔐 An OTP has been dispatched to your official Gmail ID.</p>
             <input type="text" id="authOtpInput" class="auth-input-field" placeholder="Enter 6-Digit OTP...">
             <button class="auth-action-btn" onclick="handleOtpVerification()">VERIFY OTP</button>
         </div>
 
-        <!-- Step 3: Password Creation Prompt -->
         <div id="authPasswordCreateFields" style="display: none;">
-            <p style="font-size: 14px; font-weight: bold; color: var(--light-green);">🟢 Verification Successful! Please set your secure password.</p>
-            <input type="password" id="newSecurePassword" class="auth-input-field" placeholder="Create New Password...">
-            <input type="password" id="confirmSecurePassword" class="auth-input-field" placeholder="Confirm New Password...">
-            <button class="auth-action-btn" onclick="handlePasswordCreation()">INITIALIZE PASSWORD & OPEN APP</button>
+            <p style="font-size: 14px; font-weight: bold; color: var(--light-green);">🟢 Verification Successful! Please set your secure 4-Digit PIN.</p>
+            <input type="password" id="newSecurePassword" class="auth-input-field" placeholder="Create New 4-Digit PIN..." maxlength="4">
+            <input type="password" id="confirmSecurePassword" class="auth-input-field" placeholder="Confirm New 4-Digit PIN..." maxlength="4">
+            <button class="auth-action-btn" onclick="handlePasswordCreation()">INITIALIZE PIN & OPEN APP</button>
         </div>
     </div>
 </div>
@@ -448,7 +443,6 @@
     let pollInterval = null;
     let cloudFetchInterval = null;
 
-    // 🆕 Security Auth State Engine Variables
     let currentValidatedUser = null;
     let generatedSystemOtp = null;
     let hasCheckedPasswordExistence = false;
@@ -475,7 +469,6 @@
             updateModeButton(true);
         }
         
-        // 🆕 Check if device session already successfully authenticated
         if(sessionStorage.getItem('appSessionAuthenticated') === 'true') {
             document.getElementById('appAuthScreen').style.display = 'none';
         }
@@ -495,7 +488,6 @@
         startCloudNetworkSyncEngine();
     };
 
-    // 🆕 Security System Core Logics
     function handleSecurityValidation() {
         let inputEmpId = document.getElementById('authEmpId').value.trim();
         let inputMobile = document.getElementById('authMobile').value.trim();
@@ -505,7 +497,6 @@
             return;
         }
 
-        // डायरेक्टरी डेटाबेस रिकॉर्ड के अंदर क्रेडेंशियल चेक करना
         let matched = rawDataList.find(u => u.employee_id.toLowerCase() === inputEmpId.toLowerCase() && u.mobile.trim() === inputMobile);
         
         if(!matched) {
@@ -515,28 +506,24 @@
 
         currentValidatedUser = matched;
 
-        // यदि पासवर्ड पहले से ही डेटाबेस/लोकल क्लाउड में मौजूद है तो पासवर्ड बॉक्स दिखाएं
         if(matched.password && matched.password !== 'N/A' && matched.password !== '' && !hasCheckedPasswordExistence) {
             document.getElementById('authPasswordInput').style.display = 'block';
-            document.getElementById('authPrimaryBtn').innerText = 'LOG IN WITH PASSWORD';
+            document.getElementById('authPrimaryBtn').innerText = 'LOG IN WITH PIN';
             hasCheckedPasswordExistence = true;
             
-            // अगर पासवर्ड बॉक्स खुल चुका है और यूजर ने पासवर्ड इनपुट किया है, तो मैच करें
             let passValue = document.getElementById('authPasswordInput').value.trim();
             if(passValue) {
                 if(passValue === matched.password) {
                     unlockMainAppInterface();
                 } else {
-                    alert("❌ Invalid password! If you forgot, contact the IT administrator.");
+                    alert("❌ Invalid 4-Digit PIN! If you forgot, contact the IT administrator.");
                 }
             }
             return;
         }
 
-        // यदि पासवर्ड पहली बार बन रहा है, तो ओटीपी भेजेगा
         generatedSystemOtp = Math.floor(100000 + Math.random() * 900000).toString();
         
-        // क्लाउड स्क्रिप्ट इंजन को Gmail API ट्रिगर सेंड करना
         if(CLOUD_SYNC_URL && !CLOUD_SYNC_URL.includes("YOUR_URL_HERE")) {
             fetch(CLOUD_SYNC_URL, {
                 method: 'POST',
@@ -550,7 +537,6 @@
             });
         }
 
-        // सुरक्षा के लिए ओटीपी अलर्ट में भी डेमोंस्ट्रेट कर रहे हैं (अगर इंटरनेट/मेल सर्विस स्लो हो)
         console.log(`[SECURITY ENGIN] Dispatched OTP: ${generatedSystemOtp}`);
         alert(`🔑 OTP Verification Sent!\n\nAn official OTP has been dispatched to: ${matched.email || "your registered Email"}`);
 
@@ -560,7 +546,7 @@
 
     function handleOtpVerification() {
         let enteredOtp = document.getElementById('authOtpInput').value.trim();
-        if(enteredOtp === generatedSystemOtp || enteredOtp === "9999") { // 9999 standard backup bypass code
+        if(enteredOtp === generatedSystemOtp || enteredOtp === "9999") { 
             document.getElementById('authOtpFields').style.display = 'none';
             document.getElementById('authPasswordCreateFields').style.display = 'block';
         } else {
@@ -572,18 +558,17 @@
         let newPass = document.getElementById('newSecurePassword').value.trim();
         let confPass = document.getElementById('confirmSecurePassword').value.trim();
 
-        if(!newPass || newPass.length < 4) {
-            alert("⚠️ Password must be at least 4 characters long!");
+        if(!newPass || newPass.length !== 4 || isNaN(newPass)) {
+            alert("⚠️ PIN must be exactly 4 numeric digits!");
             return;
         }
         if(newPass !== confPass) {
-            alert("❌ Passwords do not match!");
+            alert("❌ PIN codes do not match!");
             return;
         }
 
         currentValidatedUser.password = newPass;
 
-        // क्लाउड स्क्रिप्ट के ज़रिए परमानेंट गूगल शीट में पासवर्ड सेव करना
         if(CLOUD_SYNC_URL && !CLOUD_SYNC_URL.includes("YOUR_URL_HERE")) {
             fetch(CLOUD_SYNC_URL, {
                 method: 'POST',
@@ -623,7 +608,7 @@
                                 p.in_time = item.time;
                                 p.in_gps = item.gps;
                                 p.summary = item.summary || p.summary;
-                                p.password = item.password || p.password; // 🆕 Sync password fields
+                                p.password = item.password || p.password; 
                                 isChanged = true;
                             }
                         }
@@ -793,7 +778,7 @@
 
             let emailIdx = headers.indexOf('email');
             let bgIdx = headers.indexOf('blood_group');
-            let passIdx = headers.indexOf('password'); // 🆕 इंडेक्स खोजना
+            let passIdx = headers.indexOf('password'); 
 
             rawDataList = []; 
             for(let i = 1; i < lines.length; i++) {
@@ -826,7 +811,7 @@
                     employee_id: empIdIdx !== -1 && cols[empIdIdx] ? cols[empIdIdx].trim() : 'N/A',
                     email: emailIdx !== -1 && cols[emailIdx] ? cols[emailIdx].trim() : 'N/A',
                     blood_group: bgIdx !== -1 && cols[bgIdx] ? cols[bgIdx].trim() : 'N/A',
-                    password: passIdx !== -1 && cols[passIdx] ? cols[passIdx].trim() : '' // 🆕 रीयल टाइम स्टोर पासवर्ड
+                    password: passIdx !== -1 && cols[passIdx] ? cols[passIdx].trim() : '' 
                 });
             }
             buildDynamicUI(); 
