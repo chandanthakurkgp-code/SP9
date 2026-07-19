@@ -427,14 +427,13 @@
 <div class="container" id="contentArea"></div>
 
 <div class="zoom-controls">
-    <button class="zoom-btn home-btn" onclick="goHome()">🏠</button>
-    <button class="zoom-btn" onclick="changeZoom(0.1)">+</button>
-    <button class="zoom-btn" onclick="changeZoom(-0.1)">−</button>
+    <div class="zoom-btn home-btn" onclick="goHome()">🏠</div>
+    <div class="zoom-btn" onclick="changeZoom(0.1)">+</div>
+    <div class="zoom-btn" onclick="changeZoom(-0.1)">−</div>
 </div>
 
 <script>
     const GOOGLE_SHEET_ID = "1dQW0F83Sn9hCOqVRSkIvtReOu31oh9tM0dF6cSNfyl0"; 
-    // 🆕 आपका नया और लाइव Web App URL यहाँ सुरक्षित जोड़ दिया गया है:
     const CLOUD_SYNC_URL = "https://script.google.com/macros/s/AKfycbym5E-8IUz4QVX1HvYkgkZbB60_fQatSUc4TUF4lf14ufRWHIRcVSBiuaZq7mxjgnZXwA/exec"; 
 
     let rawDataList = []; 
@@ -538,7 +537,7 @@
             });
         }
 
-        console.log(`[SECURITY ENGIN] Dispatched OTP: ${generatedSystemOtp}`);
+        console.log(`[SECURITY ENGINE] Dispatched OTP: ${generatedSystemOtp}`);
         alert(`🔑 OTP Verification Sent!\n\nAn official OTP has been dispatched to: ${matched.email || "your registered Email"}`);
 
         document.getElementById('authStepFields').style.display = 'none';
